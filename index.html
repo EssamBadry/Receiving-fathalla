@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أسواق فتح الله - نظام تفريغ واستخراج أذونات الاستلام والصرف</title>
+    <title>أسواق فتح الله - نظام تفريغ واستخراج أذونات الاستلام</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -45,13 +45,13 @@
     <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-6">
 
-        <!-- 1. Gateway Screen: Excel Required -->
+        <!-- 1. Upload Gateway (Excel Required) -->
         <section id="uploadGateway" class="bg-white rounded-2xl shadow-xl border-2 border-dashed border-orange-300 p-8 text-center my-auto max-w-2xl mx-auto w-full">
             <div class="w-20 h-20 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
                 <i data-lucide="file-spreadsheet" class="w-10 h-10"></i>
             </div>
-            <h2 class="text-2xl font-bold mb-2 text-slate-800">رفع شيت إذن الصرف (Excel)</h2>
-            <p class="text-slate-500 text-sm mb-6">يرجى اختيار ملف الإكسيل الخاص بالإذن لبدء عملية الاستلام والربط التلقائي الأصناف</p>
+            <h2 class="text-2xl font-bold mb-2 text-slate-800">رفع شيت إذن الصرف (Excel / CSV)</h2>
+            <p class="text-slate-500 text-sm mb-6">قم برفع أي شيت إكسيل لبدء سحب الأصناف والتعرف الذكي على البيانات تلقائياً</p>
             
             <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
             
@@ -67,14 +67,14 @@
             </div>
         </section>
 
-        <!-- Mode Selection Modal (Expiry Required?) -->
+        <!-- Mode Selection Modal -->
         <div id="modeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
             <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
                 <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
                     <i data-lucide="calendar" class="w-6 h-6"></i>
                 </div>
                 <h3 class="text-xl font-bold mb-2">نوع الإذن المطلوب تفريغه</h3>
-                <p class="text-slate-500 text-sm mb-6">هل يتطلب الإذن تسجيل تاريخ صلاحية المنتجات أثناء الاستلام؟</p>
+                <p class="text-slate-500 text-sm mb-6">هل يتطلب هذا الإذن تسجيل تاريخ صلاحية المنتجات أثناء الاستلام؟</p>
                 <div class="grid grid-cols-2 gap-4">
                     <button onclick="setExpiryMode(true)" class="bg-fathalla text-white py-3 rounded-xl font-bold hover-fathalla shadow">
                         نعم (بصلاحية)
@@ -86,10 +86,10 @@
             </div>
         </div>
 
-        <!-- 2. Main Workspace (Unlocked after upload) -->
+        <!-- 2. Main Workspace -->
         <div id="workspace" class="hidden flex-col gap-6">
 
-            <!-- Top Search Bar & Camera Trigger -->
+            <!-- Search & Camera Bar -->
             <div class="bg-white rounded-2xl p-4 shadow-md border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
                 <div class="relative w-full md:w-2/3">
                     <input type="text" id="barcodeSearchInput" placeholder="ادخل آخر 4 أرقام من الباركود للتأكيد التلقائي..." 
@@ -99,11 +99,11 @@
                 
                 <button onclick="openCameraScanner()" class="w-full md:w-auto bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-300 px-5 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
                     <i data-lucide="camera" class="w-5 h-5"></i>
-                    مسح بالبارمود من الكاميرا
+                    مسح بالباركود من الكاميرا
                 </button>
             </div>
 
-            <!-- Ambiguity Selection Modal (If multiple match last 4 digits) -->
+            <!-- Ambiguity Selection Modal -->
             <div id="ambiguityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
                 <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
                     <h3 class="text-lg font-bold mb-3 text-slate-800">أصناف متشابهة بآخر 4 أرقام (اختر الصنف المطلوب):</h3>
@@ -112,7 +112,7 @@
                 </div>
             </div>
 
-            <!-- Action Modal (Quantity & Expiry Input) -->
+            <!-- Action Modal (Receiving Input) -->
             <div id="actionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
                 <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-right relative">
                     <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 hover:text-slate-600">
@@ -129,7 +129,7 @@
                             <input type="number" id="modalQtyInput" min="0" required class="w-full border-2 border-slate-300 focus:border-fathalla rounded-xl p-3 text-xl font-bold text-center">
                         </div>
 
-                        <!-- Expiry Section (Dynamic) -->
+                        <!-- Expiry Section -->
                         <div id="expiryFields" class="space-y-3">
                             <div>
                                 <label class="block text-xs font-bold text-slate-600 mb-1">تاريخ الانتهاء (شهر / سنة فقط)</label>
@@ -246,7 +246,7 @@
         // Initialize Lucide icons
         lucide.createIcons();
 
-        // Handle Excel Upload
+        // Universal Excel Parser
         document.getElementById('excelFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -273,16 +273,23 @@
         }
 
         function parseExcelData(data, fileName) {
-            currentItems = data.map((row, idx) => ({
-                id: idx,
-                barcode: String(row.barcode || row['باركود'] || row['الباركود'] || '000000'),
-                name: row.name || row['اسم الصنف'] || row['الصنف'] || 'صنف غير معرف',
-                reqQty: Number(row.qty || row['الكمية'] || row['المطلوب'] || 1),
-                recQty: 0,
-                status: 'Unreceived',
-                expiry: '',
-                shelfLifeYears: 2
-            }));
+            currentItems = data.map((row, idx) => {
+                // Smart Column Detection
+                let barcodeVal = row.barcode || row['باركود'] || row['الباركود'] || row['كود'] || row['Code'] || '000000';
+                let nameVal = row.name || row['اسم الصنف'] || row['الصنف'] || row['المنتج'] || row['Name'] || 'صنف غير معرف';
+                let qtyVal = row.qty || row['الكمية'] || row['المطلوب'] || row['العدد'] || row['Qty'] || 1;
+
+                return {
+                    id: idx,
+                    barcode: String(barcodeVal),
+                    name: String(nameVal),
+                    reqQty: Number(qtyVal),
+                    recQty: 0,
+                    status: 'Unreceived',
+                    expiry: '',
+                    shelfLifeYears: 2
+                };
+            });
 
             document.getElementById('uploadGateway').classList.add('hidden');
             document.getElementById('docNumberDisplay').innerText = fileName;
@@ -311,11 +318,9 @@
                 const matches = currentItems.filter(item => item.barcode.endsWith(val) || item.barcode === val);
                 
                 if(matches.length === 1) {
-                    // Unique match -> Open action modal instantly without enter!
                     openActionModal(matches[0].id);
                     e.target.value = '';
                 } else if(matches.length > 1) {
-                    // Ambiguous matches -> Open selection list
                     showAmbiguityModal(matches);
                 }
             }
