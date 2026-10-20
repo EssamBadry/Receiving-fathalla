@@ -3,529 +3,486 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>استلام أذون تحويل - فتح الله</title>
+    <title>أسواق فتح الله - نظام تفريغ واستخراج أذونات الاستلام والصرف</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Html5Qrcode Library for Camera Barcode Scanning -->
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- SheetJS (XLSX) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Html5Qrcode (Camera Scanner) -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- Google Fonts: Cairo -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap');
-        body {
-            font-family: 'Cairo', sans-serif;
-            background-color: #f8fafc;
-        }
-        #reader video {
-            object-fit: cover !important;
-            border-radius: 0.75rem;
-        }
+        body { font-family: 'Cairo', sans-serif; background-color: #f8fafc; }
+        .bg-fathalla { background-color: #ea580c; }
+        .text-fathalla { color: #ea580c; }
+        .border-fathalla { border-color: #ea580c; }
+        .hover-fathalla:hover { background-color: #c2410c; }
     </style>
 </head>
-<body class="bg-gray-100 min-h-screen text-gray-800 pb-12">
+<body class="text-slate-800 min-h-screen flex flex-col">
 
     <!-- Header / Navbar -->
-    <header class="bg-red-700 text-white shadow-lg sticky top-0 z-40">
-        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="bg-white text-red-700 font-black px-3 py-1 rounded-lg text-xl tracking-wider shadow">
-                    فتح الله
-                </div>
+    <header class="bg-fathalla text-white shadow-lg sticky top-0 z-30">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center space-x-3 space-x-reverse">
+                <div class="bg-white text-orange-600 p-2 rounded-lg font-bold text-xl shadow">F</div>
                 <div>
-                    <h1 class="font-bold text-lg leading-tight">نظام استلام أذون التحويل</h1>
-                    <p class="text-xs text-red-200">إذن رقم: <span id="docNo" class="font-bold underline">3285</span></p>
+                    <h1 class="font-extrabold text-lg leading-tight">أسواق فتح الله ماركت</h1>
+                    <p class="text-xs text-orange-100">نظام استلام وتفريغ أذونات الصرف والاستلام</p>
                 </div>
             </div>
-            <button onclick="toggleSummaryModal()" class="bg-red-800 hover:bg-red-900 text-white px-3 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 border border-red-600 shadow transition">
-                <i class="fa-solid fa-file-invoice"></i>
-                <span>التقرير والإنهاء</span>
-            </button>
+            
+            <div id="activeDocBadge" class="hidden bg-orange-700/60 border border-orange-400 px-3 py-1 rounded-full text-xs font-semibold">
+                رقم الإذن: <span id="docNumberDisplay" class="font-bold text-yellow-300">--</span>
+            </div>
         </div>
     </header>
 
-    <main class="max-w-5xl mx-auto px-4 mt-4 space-y-4">
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-6">
 
-        <!-- Info Card -->
-        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-            <div>
-                <span class="text-gray-500 block text-xs">فرع الصرف:</span>
-                <strong class="text-gray-800" id="branchFrom">سموحة</strong>
+        <!-- 1. Gateway Screen: Excel Required -->
+        <section id="uploadGateway" class="bg-white rounded-2xl shadow-xl border-2 border-dashed border-orange-300 p-8 text-center my-auto max-w-2xl mx-auto w-full">
+            <div class="w-20 h-20 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="file-spreadsheet" class="w-10 h-10"></i>
             </div>
-            <div>
-                <span class="text-gray-500 block text-xs">المخزن المستلم:</span>
-                <strong class="text-gray-800" id="branchTo">عجمى ستار (نيو لوجيستيك)</strong>
+            <h2 class="text-2xl font-bold mb-2 text-slate-800">رفع شيت إذن الصرف (Excel)</h2>
+            <p class="text-slate-500 text-sm mb-6">يرجى اختيار ملف الإكسيل الخاص بالإذن لبدء عملية الاستلام والربط التلقائي الأصناف</p>
+            
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
+            
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button onclick="document.getElementById('excelFileInput').click()" class="bg-fathalla text-white px-6 py-3 rounded-xl font-bold hover-fathalla shadow-md flex items-center justify-center gap-2">
+                    <i data-lucide="upload" class="w-5 h-5"></i>
+                    اختيار ملف Excel
+                </button>
+                <button onclick="loadDemoData()" class="bg-slate-100 text-slate-700 hover:bg-slate-200 px-6 py-3 rounded-xl font-semibold border border-slate-300 flex items-center justify-center gap-2">
+                    <i data-lucide="play-circle" class="w-5 h-5"></i>
+                    تجربة شيت تجريبي (إذن 3285)
+                </button>
             </div>
-            <div>
-                <span class="text-gray-500 block text-xs">تاريخ المستند:</span>
-                <strong class="text-gray-800" id="docDate">2026/10/13</strong>
-            </div>
-            <div>
-                <span class="text-gray-500 block text-xs">حالة الاستلام:</span>
-                <span id="statusBadge" class="inline-block bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded-full font-bold">جاري الاستلام</span>
-            </div>
-        </div>
+        </section>
 
-        <!-- Fast Input Controls Section -->
-        <div class="bg-white p-4 rounded-xl shadow-md border border-red-100 space-y-3">
-            <div class="flex flex-col md:flex-row gap-3">
-                
-                <!-- Quick Code Search Input (4 Digits) -->
-                <div class="flex-1 relative">
-                    <label class="block text-xs font-bold text-gray-700 mb-1">
-                        <i class="fa-solid fa-keyboard text-red-600 ml-1"></i> إدخال بآخر 4 أرقام من كود البند:
-                    </label>
-                    <div class="relative">
-                        <input type="text" id="shortCodeInput" maxlength="8" placeholder="أدخل آخر 4 أرقام (مثال: 0001)..." 
-                            class="w-full pl-10 pr-4 py-2.5 bg-gray-50 border-2 border-red-200 rounded-lg text-lg font-bold text-gray-800 focus:outline-none focus:border-red-600 focus:bg-white transition"
-                            onkeyup="handleShortCodeInput(event)">
-                        <button onclick="processShortCodeSearch()" class="absolute left-2 top-2 bg-red-600 text-white px-3 py-1 rounded-md text-xs font-bold hover:bg-red-700">
-                            فتح (Enter)
-                        </button>
-                    </div>
-                    <p class="text-[11px] text-gray-500 mt-1">اكتب الأرقام ودوس Enter أو سيفتح تلقائياً عند تطابق صنف واحد.</p>
+        <!-- Mode Selection Modal (Expiry Required?) -->
+        <div id="modeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center">
+                <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <i data-lucide="calendar" class="w-6 h-6"></i>
                 </div>
-
-                <!-- Camera Toggle Button -->
-                <div class="flex items-end">
-                    <button id="cameraToggleBtn" onclick="toggleCameraScanner()" class="w-full md:w-auto bg-gray-800 hover:bg-black text-white px-5 py-2.5 rounded-lg font-bold text-sm flex items-center justify-center gap-2 shadow transition">
-                        <i class="fa-solid fa-camera"></i>
-                        <span id="cameraBtnText">تشغيل كاميرا الباركود</span>
+                <h3 class="text-xl font-bold mb-2">نوع الإذن المطلوب تفريغه</h3>
+                <p class="text-slate-500 text-sm mb-6">هل يتطلب الإذن تسجيل تاريخ صلاحية المنتجات أثناء الاستلام؟</p>
+                <div class="grid grid-cols-2 gap-4">
+                    <button onclick="setExpiryMode(true)" class="bg-fathalla text-white py-3 rounded-xl font-bold hover-fathalla shadow">
+                        نعم (بصلاحية)
+                    </button>
+                    <button onclick="setExpiryMode(false)" class="bg-slate-200 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-300">
+                        لا (بدون صلاحية)
                     </button>
                 </div>
             </div>
-
-            <!-- Camera Scanner Area -->
-            <div id="cameraArea" class="hidden bg-black rounded-xl p-3 text-center relative overflow-hidden">
-                <div id="reader" class="w-full max-w-md mx-auto"></div>
-                <p class="text-white text-xs mt-2"><i class="fa-solid fa-expand text-red-400"></i> وجه الكاميرا نحو باركود الصنف لمسحه تلقائياً</p>
-                <button onclick="toggleCameraScanner()" class="mt-2 bg-red-600 text-white text-xs px-3 py-1 rounded-full">إغلاق الكاميرا</button>
-            </div>
         </div>
 
-        <!-- Items Table / Cards -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="p-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                <h2 class="font-bold text-gray-700 text-sm md:text-base flex items-center gap-2">
-                    <i class="fa-solid fa-boxes-stacked text-red-600"></i> قائمة أصناف إذن التحويل
-                </h2>
-                <span id="itemsCountBadge" class="bg-gray-200 text-gray-700 text-xs px-2.5 py-1 rounded-full font-bold">0 / 7 أصناف</span>
-            </div>
+        <!-- 2. Main Workspace (Unlocked after upload) -->
+        <div id="workspace" class="hidden flex-col gap-6">
 
-            <!-- Responsive Table -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-right text-sm">
-                    <thead class="bg-gray-100 text-gray-600 text-xs uppercase border-b">
-                        <tr>
-                            <th class="p-3">م</th>
-                            <th class="p-3">كود البند</th>
-                            <th class="p-3">اسم الصنف / الباركود</th>
-                            <th class="p-3 text-center">المطلوب</th>
-                            <th class="p-3 text-center">المستلم</th>
-                            <th class="p-3 text-center">الصلاحية</th>
-                            <th class="p-3 text-center">إجراء</th>
-                        </tr>
-                    </thead>
-                    <tbody id="itemsTableBody" class="divide-y divide-gray-200">
-                        <!-- Populated by JS -->
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </main>
-
-    <!-- Item Entry Modal -->
-    <div id="itemModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden transform transition-all">
-            <div class="bg-red-700 text-white p-4 flex justify-between items-center">
-                <h3 class="font-bold text-base flex items-center gap-2">
-                    <i class="fa-solid fa-box-open"></i> استلام وتأكيد صنف
-                </h3>
-                <button onclick="closeModal()" class="text-white/80 hover:text-white text-xl font-bold">&times;</button>
-            </div>
-            
-            <div class="p-5 space-y-4 text-sm">
-                <!-- Item Header Info -->
-                <div class="bg-gray-50 p-3 rounded-lg border border-gray-200">
-                    <h4 id="modalItemName" class="font-bold text-gray-800 text-base mb-1">--</h4>
-                    <div class="text-xs text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
-                        <span>كود: <strong id="modalItemCode" class="text-gray-700">--</strong></span>
-                        <span>باركود: <strong id="modalBarcode" class="text-gray-700">--</strong></span>
-                        <span>الوحدة: <strong id="modalUnit" class="text-gray-700">قطعة</strong></span>
-                    </div>
+            <!-- Top Search Bar & Camera Trigger -->
+            <div class="bg-white rounded-2xl p-4 shadow-md border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
+                <div class="relative w-full md:w-2/3">
+                    <input type="text" id="barcodeSearchInput" placeholder="ادخل آخر 4 أرقام من الباركود للتأكيد التلقائي..." 
+                           class="w-full bg-slate-50 border-2 border-orange-200 rounded-xl px-4 py-3 pr-10 text-lg font-bold text-slate-800 focus:outline-none focus:border-fathalla">
+                    <i data-lucide="search" class="w-6 h-6 text-orange-400 absolute left-3 top-3.5"></i>
                 </div>
-
-                <!-- Quantity Inputs -->
-                <div class="grid grid-cols-2 gap-3">
-                    <div class="bg-gray-100 p-2.5 rounded-lg text-center">
-                        <span class="text-xs text-gray-500 block">الكمية المطلوبة بالإذن</span>
-                        <span id="modalDispatchedQty" class="text-xl font-black text-gray-800">0</span>
-                    </div>
-                    <div>
-                        <label class="text-xs font-bold text-gray-700 block mb-1">الكمية الفعلية المستلمة:</label>
-                        <input type="number" id="modalActualQty" class="w-full p-2.5 text-center text-xl font-bold border-2 border-red-500 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-600 bg-red-50/30">
-                    </div>
-                </div>
-
-                <!-- Production Date & Validity -->
-                <div class="space-y-3 pt-2 border-t">
-                    <label class="text-xs font-bold text-gray-700 block">
-                        <i class="fa-solid fa-calendar-days text-red-600 ml-1"></i> تاريخ الإنتاج:
-                    </label>
-                    <input type="date" id="modalProdDate" onchange="calculateExpiryAndAlert()" class="w-full p-2 border border-gray-300 rounded-lg font-bold text-gray-800 text-center">
-
-                    <label class="text-xs font-bold text-gray-700 block pt-1">مدة الصلاحية الكلية:</label>
-                    <div class="grid grid-cols-5 gap-1.5" id="expiryOptions">
-                        <button type="button" onclick="setExpiryMonths(3)" class="expiry-btn py-1.5 border rounded-md font-bold text-xs hover:bg-red-50" data-months="3">3 شهور</button>
-                        <button type="button" onclick="setExpiryMonths(6)" class="expiry-btn py-1.5 border rounded-md font-bold text-xs hover:bg-red-50" data-months="6">6 شهور</button>
-                        <button type="button" onclick="setExpiryMonths(12)" class="expiry-btn py-1.5 border rounded-md font-bold text-xs hover:bg-red-50" data-months="12">سنة</button>
-                        <button type="button" onclick="setExpiryMonths(24)" class="expiry-btn py-1.5 border rounded-md font-bold text-xs hover:bg-red-50" data-months="24">سنتين</button>
-                        <button type="button" onclick="setExpiryMonths(36)" class="expiry-btn py-1.5 border rounded-md font-bold text-xs hover:bg-red-50" data-months="36">3 سنين</button>
-                    </div>
-                </div>
-
-                <!-- Half Life Warning Banner -->
-                <div id="halfLifeAlert" class="hidden bg-amber-50 border-r-4 border-amber-500 p-3 rounded text-amber-900 text-xs space-y-1">
-                    <div class="flex items-center font-bold gap-1 text-amber-800">
-                        <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
-                        <span>تنبيه: الصنف تجاوز منتصف فترة الصلاحية!</span>
-                    </div>
-                    <p class="text-[11px] text-amber-700">تاريخ الانتهاء المتوقع: <span id="modalExpiryDate" class="font-bold">--</span>. سيتم تسجيل البند تلقائياً في شيت المخاطر.</p>
-                </div>
-            </div>
-
-            <div class="p-4 bg-gray-50 flex gap-2 border-t">
-                <button onclick="saveItemData()" class="flex-1 bg-red-700 hover:bg-red-800 text-white py-2.5 rounded-lg font-bold text-sm shadow transition">
-                    حفظ وتأكيد الاستلام
-                </button>
-                <button onclick="closeModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-lg font-bold text-sm">
-                    إلغاء
+                
+                <button onclick="openCameraScanner()" class="w-full md:w-auto bg-orange-100 text-orange-700 hover:bg-orange-200 border border-orange-300 px-5 py-3 rounded-xl font-bold flex items-center justify-center gap-2">
+                    <i data-lucide="camera" class="w-5 h-5"></i>
+                    مسح بالبارمود من الكاميرا
                 </button>
             </div>
-        </div>
-    </div>
 
-    <!-- Summary / Report Modal -->
-    <div id="summaryModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            <div class="bg-gray-900 text-white p-4 flex justify-between items-center">
-                <h3 class="font-bold text-base flex items-center gap-2">
-                    <i class="fa-solid fa-clipboard-check text-red-500"></i> تقرير الفروقات النهائي لإذن 3285
-                </h3>
-                <button onclick="toggleSummaryModal()" class="text-white/80 hover:text-white text-xl font-bold">&times;</button>
+            <!-- Ambiguity Selection Modal (If multiple match last 4 digits) -->
+            <div id="ambiguityModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6">
+                    <h3 class="text-lg font-bold mb-3 text-slate-800">أصناف متشابهة بآخر 4 أرقام (اختر الصنف المطلوب):</h3>
+                    <div id="ambiguityList" class="flex flex-col gap-2 max-h-60 overflow-y-auto mb-4"></div>
+                    <button onclick="closeAmbiguityModal()" class="w-full bg-slate-200 text-slate-700 py-2 rounded-lg font-bold">إلغاء</button>
+                </div>
             </div>
 
-            <div class="p-5 overflow-y-auto space-y-4 text-sm flex-1">
-                <div class="grid grid-cols-3 gap-3 text-center">
-                    <div class="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                        <span class="text-xs text-blue-600 block font-semibold">إجمالي الأصناف</span>
-                        <span id="rptTotalItems" class="text-xl font-bold text-blue-900">0</span>
-                    </div>
-                    <div class="bg-green-50 p-3 rounded-lg border border-green-100">
-                        <span class="text-xs text-green-600 block font-semibold">أصناف تم استلامها</span>
-                        <span id="rptScannedItems" class="text-xl font-bold text-green-900">0</span>
-                    </div>
-                    <div class="bg-amber-50 p-3 rounded-lg border border-amber-100">
-                        <span class="text-xs text-amber-600 block font-semibold">تنبيهات منتصف المدة</span>
-                        <span id="rptHalfLifeCount" class="text-xl font-bold text-amber-900">0</span>
-                    </div>
-                </div>
+            <!-- Action Modal (Quantity & Expiry Input) -->
+            <div id="actionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+                <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-right relative">
+                    <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 hover:text-slate-600">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                    
+                    <span class="text-xs font-bold text-orange-600 bg-orange-100 px-2 py-1 rounded">تأكيد الاستلام</span>
+                    <h3 id="modalItemName" class="text-xl font-extrabold text-slate-800 my-2">--</h3>
+                    <p class="text-xs text-slate-500 mb-4">الباركود: <span id="modalItemBarcode" class="font-mono text-slate-700">--</span></p>
 
-                <div class="border rounded-lg overflow-hidden">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-gray-100 text-gray-700 font-bold border-b">
+                    <form id="actionForm" onsubmit="saveItemReceiving(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-600 mb-1">الكمية المستلمة فعلياً</label>
+                            <input type="number" id="modalQtyInput" min="0" required class="w-full border-2 border-slate-300 focus:border-fathalla rounded-xl p-3 text-xl font-bold text-center">
+                        </div>
+
+                        <!-- Expiry Section (Dynamic) -->
+                        <div id="expiryFields" class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">تاريخ الانتهاء (شهر / سنة فقط)</label>
+                                <input type="month" id="modalExpiryInput" class="w-full border-2 border-slate-300 focus:border-fathalla rounded-xl p-3 text-lg font-bold text-center">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 mb-1">عدد سنوات الصلاحية الإجمالية للمنتج</label>
+                                <div class="grid grid-cols-5 gap-1" id="shelfLifeSelector">
+                                    <button type="button" onclick="setShelfLifeYears(1)" class="years-btn bg-slate-100 border py-2 rounded font-bold text-sm">1 سنة</button>
+                                    <button type="button" onclick="setShelfLifeYears(2)" class="years-btn bg-orange-600 text-white border py-2 rounded font-bold text-sm">2 سنة</button>
+                                    <button type="button" onclick="setShelfLifeYears(3)" class="years-btn bg-slate-100 border py-2 rounded font-bold text-sm">3 سنة</button>
+                                    <button type="button" onclick="setShelfLifeYears(4)" class="years-btn bg-slate-100 border py-2 rounded font-bold text-sm">4 سنة</button>
+                                    <button type="button" onclick="setShelfLifeYears(5)" class="years-btn bg-slate-100 border py-2 rounded font-bold text-sm">5 سنة</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-fathalla text-white py-3 rounded-xl font-bold hover-fathalla shadow-lg mt-2">
+                            حفظ وتأكيد الاستلام
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="flex border-b border-slate-200 space-x-4 space-x-reverse">
+                <button onclick="switchTab('itemsTab')" id="itemsTabBtn" class="py-3 px-4 font-bold border-b-2 border-fathalla text-fathalla">جدول استلام الأصناف</button>
+                <button onclick="switchTab('discrepancyTab')" id="discrepancyTabBtn" class="py-3 px-4 font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">تقرير الاختلافات (العجز والزيادة)</button>
+                <button onclick="switchTab('expiryTab')" id="expiryTabBtn" class="py-3 px-4 font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800">تقرير نصف مدة الصلاحية</button>
+            </div>
+
+            <!-- Tab 1: All Items -->
+            <div id="itemsTab" class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-orange-50 text-orange-900 border-b border-orange-100 font-bold">
                             <tr>
-                                <th class="p-2">الصنف</th>
-                                <th class="p-2 text-center">المطلوب</th>
-                                <th class="p-2 text-center">الفعلي</th>
-                                <th class="p-2 text-center">الفارق</th>
-                                <th class="p-2 text-center">الحالة</th>
+                                <th class="p-3">#</th>
+                                <th class="p-3">الباركود</th>
+                                <th class="p-3">اسم الصنف</th>
+                                <th class="p-3">المطلوب</th>
+                                <th class="p-3">المستلم</th>
+                                <th class="p-3">الحالة</th>
+                                <th class="p-3">الصلاحية</th>
+                                <th class="p-3">إجراء</th>
                             </tr>
                         </thead>
-                        <tbody id="summaryReportTable" class="divide-y divide-gray-200">
-                            <!-- Report Rows -->
-                        </tbody>
+                        <tbody id="itemsTableBody" class="divide-y divide-slate-100"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="p-4 bg-gray-50 flex gap-2 border-t">
-                <button onclick="alert('تم ترحيل وتقفيل الإذن بنجاح!'); toggleSummaryModal();" class="flex-1 bg-green-700 hover:bg-green-800 text-white py-2.5 rounded-lg font-bold text-sm shadow">
-                    إنهاء وتقفيل الإذن
-                </button>
-                <button onclick="toggleSummaryModal()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2.5 rounded-lg font-bold text-sm">
-                    إغلاق
-                </button>
+            <!-- Tab 2: Discrepancy Report -->
+            <div id="discrepancyTab" class="hidden bg-white rounded-2xl shadow-md border border-slate-200 p-4">
+                <h3 class="font-bold text-lg mb-3 text-slate-800">تقرير الفروقات والعجز/الزيادة</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-100 text-slate-700 font-bold">
+                            <tr>
+                                <th class="p-3">الباركود</th>
+                                <th class="p-3">الصنف</th>
+                                <th class="p-3">المطلوب</th>
+                                <th class="p-3">المستلم</th>
+                                <th class="p-3">الفارق</th>
+                                <th class="p-3">النتيجة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="discrepancyTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
             </div>
+
+            <!-- Tab 3: Expiry Warning Report -->
+            <div id="expiryTab" class="hidden bg-white rounded-2xl shadow-md border border-slate-200 p-4">
+                <h3 class="font-bold text-lg mb-3 text-slate-800">تقرير نصف مدة الصلاحية (مراجعة القبول)</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-right text-sm">
+                        <thead class="bg-slate-100 text-slate-700 font-bold">
+                            <tr>
+                                <th class="p-3">الصنف</th>
+                                <th class="p-3">تاريخ الانتهاء</th>
+                                <th class="p-3">السنوات المحددة</th>
+                                <th class="p-3">حالة نصف المدة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expiryTableBody" class="divide-y divide-slate-100"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Camera Scanner Modal -->
+    <div id="cameraModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-4 relative text-center">
+            <button onclick="closeCameraScanner()" class="absolute left-3 top-3 bg-slate-200 p-2 rounded-full">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+            <h3 class="font-bold text-md mb-2">ماسح الباركود للكاميرا</h3>
+            <div id="reader" class="w-full h-64 bg-black rounded-lg overflow-hidden"></div>
         </div>
     </div>
 
-    <!-- Application Script -->
+    <!-- Application Script Logic -->
     <script>
-        // Data derived directly from Excel Document 3285
-        const items = [
-            { seq: 1, itemCode: "15080001", barcode: "90162602", name: "ريد بول مشروب طاقه كانز250مل", unit: "قطعة", dispatchedQty: 960, actualQty: 0, isScanned: false, prodDate: null, expiryMonths: 24 },
-            { seq: 2, itemCode: "15080012", barcode: "9002490100490", name: "ريد بول 250مل عرض 4 ق", unit: "قطعة", dispatchedQty: 180, actualQty: 0, isScanned: false, prodDate: null, expiryMonths: 24 },
-            { seq: 3, itemCode: "99041246", barcode: "90424014", name: "ريد بول مشروب طاقة خالى من السكر 250ملل", unit: "قطعة", dispatchedQty: 120, actualQty: 0, isScanned: false, prodDate: null, expiryMonths: 24 },
-            { seq: 4, itemCode: "99172265", barcode: "9002490200381", name: "ريد بول مشروب طاقة خالى من السكر 250ملل شرنك 4ق", unit: "قطعة", dispatchedQty: 30, actualQty: 0, isScanned: false, prodDate: null, expiryMonths: 24 },
-            { seq: 5, itemCode: "99120019", barcode: "90435775", name: "ريد بول مشروب طاقه طعم جوزهند والتوت كانز250مل", unit: "قطعة", dispatchedQty: 120, actualQty: 0, isScanned: false, prodDate: null, expiryMonths: 24 },
-            { seq: 6, itemCode: "99194604", barcode: "9002490263843", name: "ريد بول طاقه جوزهند والتوت كانز250مل شرنك 4ق", unit: "قطعة", dispatchedQty: 30, actualQty: 0, isScanned: false, prodDate: null, expiryMonths: 24 },
-            { seq: 7, itemCode: "99279639", barcode: "90493416", name: "ريد بول مشروب طاقه كانز زيرو250 مل", unit: "قطعة", dispatchedQty: 120, actualQty: 0, isScanned: false, prodDate: null, expiryMonths: 24 }
-        ];
-
+        let currentItems = [];
+        let isExpiryRequired = true;
         let selectedItemIndex = null;
+        let selectedShelfLifeYears = 2;
         let html5QrcodeScanner = null;
-        let isCameraRunning = false;
 
-        document.addEventListener("DOMContentLoaded", () => {
-            renderTable();
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Handle Excel Upload
+        document.getElementById('excelFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet);
+                
+                parseExcelData(jsonData, file.name);
+            };
+            reader.readAsArrayBuffer(file);
         });
 
-        // Render Main Items Table
-        function renderTable(filteredItems = null) {
-            const tableBody = document.getElementById("itemsTableBody");
-            const listToRender = filteredItems || items;
-            tableBody.innerHTML = "";
+        function loadDemoData() {
+            const demo = [
+                { barcode: '622300012602', name: 'أرز الضحى 1 كجم', qty: 50 },
+                { barcode: '622100000049', name: 'زيت عباد الشمس كريستال 800 مل', qty: 30 },
+                { barcode: '622400005512', name: 'سكر المطبخ 1 كجم', qty: 100 },
+                { barcode: '622105500049', name: 'شاي العروسة 250 جم', qty: 40 }
+            ];
+            parseExcelData(demo, "إذن صرف رقم 3285 (تجريبي)");
+        }
 
-            listToRender.forEach((item) => {
-                const originalIndex = items.findIndex(i => i.itemCode === item.itemCode);
-                const isHalfPassed = checkHalfLifePassed(item);
-                const diff = item.actualQty - item.dispatchedQty;
+        function parseExcelData(data, fileName) {
+            currentItems = data.map((row, idx) => ({
+                id: idx,
+                barcode: String(row.barcode || row['باركود'] || row['الباركود'] || '000000'),
+                name: row.name || row['اسم الصنف'] || row['الصنف'] || 'صنف غير معرف',
+                reqQty: Number(row.qty || row['الكمية'] || row['المطلوب'] || 1),
+                recQty: 0,
+                status: 'Unreceived',
+                expiry: '',
+                shelfLifeYears: 2
+            }));
 
-                const tr = document.createElement("tr");
-                tr.className = item.isScanned ? "bg-green-50/60 hover:bg-green-100/50" : "hover:bg-gray-50";
+            document.getElementById('uploadGateway').classList.add('hidden');
+            document.getElementById('docNumberDisplay').innerText = fileName;
+            document.getElementById('activeDocBadge').classList.remove('hidden');
+            document.getElementById('modeModal').classList.remove('hidden');
+        }
 
+        function setExpiryMode(required) {
+            isExpiryRequired = required;
+            document.getElementById('modeModal').classList.add('hidden');
+            document.getElementById('workspace').classList.remove('hidden');
+            document.getElementById('workspace').classList.add('flex');
+            
+            if(!isExpiryRequired) {
+                document.getElementById('expiryFields').classList.add('hidden');
+            } else {
+                document.getElementById('expiryFields').classList.remove('hidden');
+            }
+            renderTables();
+        }
+
+        // 4-Digit Auto Trigger Logic (Without Enter)
+        document.getElementById('barcodeSearchInput').addEventListener('input', function(e) {
+            const val = e.target.value.trim();
+            if(val.length >= 4) {
+                const matches = currentItems.filter(item => item.barcode.endsWith(val) || item.barcode === val);
+                
+                if(matches.length === 1) {
+                    // Unique match -> Open action modal instantly without enter!
+                    openActionModal(matches[0].id);
+                    e.target.value = '';
+                } else if(matches.length > 1) {
+                    // Ambiguous matches -> Open selection list
+                    showAmbiguityModal(matches);
+                }
+            }
+        });
+
+        function showAmbiguityModal(matches) {
+            const list = document.getElementById('ambiguityList');
+            list.innerHTML = '';
+            matches.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-right p-3 bg-slate-50 border hover:bg-orange-50 rounded-lg flex justify-between font-bold";
+                btn.innerHTML = `<span>${item.name}</span> <span class="font-mono text-slate-500">${item.barcode}</span>`;
+                btn.onclick = () => {
+                    closeAmbiguityModal();
+                    openActionModal(item.id);
+                    document.getElementById('barcodeSearchInput').value = '';
+                };
+                list.appendChild(btn);
+            });
+            document.getElementById('ambiguityModal').classList.remove('hidden');
+        }
+
+        function closeAmbiguityModal() {
+            document.getElementById('ambiguityModal').classList.add('hidden');
+        }
+
+        function openActionModal(idx) {
+            selectedItemIndex = idx;
+            const item = currentItems[idx];
+            document.getElementById('modalItemName').innerText = item.name;
+            document.getElementById('modalItemBarcode').innerText = item.barcode;
+            document.getElementById('modalQtyInput').value = item.recQty || item.reqQty;
+            document.getElementById('modalExpiryInput').value = item.expiry || '';
+            setShelfLifeYears(item.shelfLifeYears || 2);
+            
+            document.getElementById('actionModal').classList.remove('hidden');
+            document.getElementById('modalQtyInput').focus();
+        }
+
+        function closeActionModal() {
+            document.getElementById('actionModal').classList.add('hidden');
+        }
+
+        function setShelfLifeYears(years) {
+            selectedShelfLifeYears = years;
+            const btns = document.querySelectorAll('.years-btn');
+            btns.forEach((btn, idx) => {
+                if(idx + 1 === years) {
+                    btn.className = "years-btn bg-orange-600 text-white border py-2 rounded font-bold text-sm";
+                } else {
+                    btn.className = "years-btn bg-slate-100 border py-2 rounded font-bold text-sm";
+                }
+            });
+        }
+
+        function saveItemReceiving(e) {
+            e.preventDefault();
+            if(selectedItemIndex === null) return;
+
+            const qty = Number(document.getElementById('modalQtyInput').value);
+            const expiry = document.getElementById('modalExpiryInput').value;
+
+            currentItems[selectedItemIndex].recQty = qty;
+            currentItems[selectedItemIndex].expiry = expiry;
+            currentItems[selectedItemIndex].shelfLifeYears = selectedShelfLifeYears;
+            currentItems[selectedItemIndex].status = 'Received';
+
+            closeActionModal();
+            renderTables();
+        }
+
+        function renderTables() {
+            // Render Table 1: Main Items
+            const tbody1 = document.getElementById('itemsTableBody');
+            tbody1.innerHTML = '';
+
+            currentItems.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                const isUnreceived = item.status === 'Unreceived';
+                
                 tr.innerHTML = `
-                    <td class="p-3 font-bold text-gray-500">${item.seq}</td>
-                    <td class="p-3 font-bold text-red-700">${item.itemCode}</td>
+                    <td class="p-3 font-bold text-slate-400">${idx + 1}</td>
+                    <td class="p-3 font-mono font-bold">${item.barcode}</td>
+                    <td class="p-3 font-bold text-slate-800">${item.name}</td>
+                    <td class="p-3 font-bold">${item.reqQty}</td>
+                    <td class="p-3 font-bold ${isUnreceived ? 'text-slate-400' : 'text-orange-600'}">${item.recQty}</td>
                     <td class="p-3">
-                        <div class="font-bold text-gray-800">${item.name}</div>
-                        <div class="text-xs text-gray-400">باركود: ${item.barcode}</div>
+                        <span class="px-2 py-1 rounded-full text-xs font-bold ${isUnreceived ? 'bg-slate-100 text-slate-500' : 'bg-emerald-100 text-emerald-700'}">
+                            ${isUnreceived ? 'لم تُستلم' : 'تم الاستلام'}
+                        </span>
                     </td>
-                    <td class="p-3 text-center font-bold">${item.dispatchedQty}</td>
-                    <td class="p-3 text-center font-bold ${item.isScanned ? 'text-blue-700 text-base' : 'text-gray-400'}">
-                        ${item.isScanned ? item.actualQty : '-'}
-                    </td>
-                    <td class="p-3 text-center">
-                        ${isHalfPassed ? '<span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-1 rounded-md font-bold"><i class="fa-solid fa-triangle-exclamation"></i> تجاوز النصف</span>' : (item.isScanned ? '<span class="text-green-600 text-xs font-bold">سليمة</span>' : '-')}
-                    </td>
-                    <td class="p-3 text-center">
-                        <button onclick="openModal(${originalIndex})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg font-bold text-xs shadow">
-                            ${item.isScanned ? 'تعديل' : 'استلام'}
+                    <td class="p-3 font-mono">${isExpiryRequired ? (item.expiry || '--') : 'غير متطلب'}</td>
+                    <td class="p-3">
+                        <button onclick="openActionModal(${idx})" class="bg-orange-100 text-orange-700 px-3 py-1 rounded-lg text-xs font-bold hover:bg-orange-200">
+                            استلام
                         </button>
                     </td>
                 `;
-                tableBody.appendChild(tr);
+                tbody1.appendChild(tr);
             });
 
-            const scannedCount = items.filter(i => i.isScanned).length;
-            document.getElementById("itemsCountBadge").innerText = `${scannedCount} / ${items.length} أصناف`;
-        }
-
-        // Handle Quick 4-Digit Search
-        function handleShortCodeInput(event) {
-            const query = event.target.value.trim();
-
-            if (event.key === "Enter") {
-                processShortCodeSearch();
-                return;
-            }
-
-            if (query.length >= 2) {
-                const matched = items.filter(item => 
-                    item.itemCode.endsWith(query) || item.itemCode.includes(query) || item.barcode.includes(query)
-                );
-                renderTable(matched);
-
-                if (query.length === 4 && matched.length === 1) {
-                    const originalIdx = items.findIndex(i => i.itemCode === matched[0].itemCode);
-                    openModal(originalIdx);
-                }
-            } else {
-                renderTable();
-            }
-        }
-
-        function processShortCodeSearch() {
-            const query = document.getElementById("shortCodeInput").value.trim();
-            if (!query) return;
-
-            const matchedIndex = items.findIndex(item => item.itemCode.endsWith(query) || item.itemCode.includes(query) || item.barcode === query);
-
-            if (matchedIndex !== -1) {
-                openModal(matchedIndex);
-                document.getElementById("shortCodeInput").value = "";
-                renderTable();
-            } else {
-                alert("لم يتم العثور على صنف يتطابق مع الكود المدخل في إذن الصرف!");
-            }
-        }
-
-        // Camera Scanner Functionality
-        function toggleCameraScanner() {
-            const cameraArea = document.getElementById("cameraArea");
-            const btnText = document.getElementById("cameraBtnText");
-
-            if (isCameraRunning) {
-                if (html5QrcodeScanner) {
-                    html5QrcodeScanner.clear();
-                }
-                cameraArea.classList.add("hidden");
-                btnText.innerText = "تشغيل كاميرا الباركود";
-                isCameraRunning = false;
-            } else {
-                cameraArea.classList.remove("hidden");
-                btnText.innerText = "إغلاق الكاميرا";
-                isCameraRunning = true;
-
-                html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 10, qrbox: { width: 250, height: 150 } });
-                html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-            }
-        }
-
-        function onScanSuccess(decodedText) {
-            const matchedIndex = items.findIndex(item => item.barcode === decodedText || item.itemCode === decodedText);
-            if (matchedIndex !== -1) {
-                toggleCameraScanner();
-                openModal(matchedIndex);
-            } else {
-                alert(`الباركود الممسوح (${decodedText}) غير موجود بإذن الصرف!`);
-            }
-        }
-
-        function onScanFailure(error) {}
-
-        // Open Modal
-        function openModal(index) {
-            selectedItemIndex = index;
-            const item = items[index];
-
-            document.getElementById("modalItemName").innerText = item.name;
-            document.getElementById("modalItemCode").innerText = item.itemCode;
-            document.getElementById("modalBarcode").innerText = item.barcode;
-            document.getElementById("modalUnit").innerText = item.unit;
-            document.getElementById("modalDispatchedQty").innerText = item.dispatchedQty;
-            document.getElementById("modalActualQty").value = item.isScanned ? item.actualQty : item.dispatchedQty;
-
-            const todayStr = new Date().toISOString().split('T')[0];
-            document.getElementById("modalProdDate").value = item.prodDate || todayStr;
-            setExpiryMonths(item.expiryMonths || 24);
-
-            document.getElementById("itemModal").classList.remove("hidden");
-        }
-
-        function closeModal() {
-            document.getElementById("itemModal").classList.add("hidden");
-            selectedItemIndex = null;
-        }
-
-        function setExpiryMonths(months) {
-            if (selectedItemIndex !== null) {
-                items[selectedItemIndex].expiryMonths = months;
-            }
-            document.querySelectorAll(".expiry-btn").forEach(btn => {
-                if (parseInt(btn.getAttribute("data-months")) === months) {
-                    btn.className = "expiry-btn py-1.5 border-2 border-red-600 bg-red-50 text-red-700 rounded-md font-bold text-xs";
-                } else {
-                    btn.className = "expiry-btn py-1.5 border border-gray-300 rounded-md font-bold text-xs hover:bg-red-50 text-gray-700";
+            // Render Table 2: Discrepancies
+            const tbody2 = document.getElementById('discrepancyTableBody');
+            tbody2.innerHTML = '';
+            currentItems.filter(i => i.status === 'Received').forEach(item => {
+                const diff = item.recQty - item.reqQty;
+                if(diff !== 0) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="p-3 font-mono">${item.barcode}</td>
+                        <td class="p-3 font-bold">${item.name}</td>
+                        <td class="p-3">${item.reqQty}</td>
+                        <td class="p-3 font-bold">${item.recQty}</td>
+                        <td class="p-3 font-bold ${diff < 0 ? 'text-red-600' : 'text-blue-600'}">${diff}</td>
+                        <td class="p-3 font-bold">${diff < 0 ? 'عجز' : 'زيادة'}</td>
+                    `;
+                    tbody2.appendChild(tr);
                 }
             });
-            calculateExpiryAndAlert();
-        }
 
-        function calculateExpiryAndAlert() {
-            const prodDateVal = document.getElementById("modalProdDate").value;
-            if (!prodDateVal || selectedItemIndex === null) return;
-
-            const prodDate = new Date(prodDateVal);
-            const months = items[selectedItemIndex].expiryMonths || 24;
-
-            const expiryDate = new Date(prodDate);
-            expiryDate.setMonth(expiryDate.getMonth() + months);
-
-            const totalDays = (expiryDate - prodDate) / (1000 * 60 * 60 * 24);
-            const passedDays = (new Date() - prodDate) / (1000 * 60 * 60 * 24);
-
-            const alertBox = document.getElementById("halfLifeAlert");
-            document.getElementById("modalExpiryDate").innerText = expiryDate.toISOString().split('T')[0];
-
-            if (passedDays >= (totalDays / 2)) {
-                alertBox.classList.remove("hidden");
-            } else {
-                alertBox.classList.add("hidden");
-            }
-        }
-
-        function checkHalfLifePassed(item) {
-            if (!item.prodDate) return false;
-            const prodDate = new Date(item.prodDate);
-            const expiryDate = new Date(prodDate);
-            expiryDate.setMonth(expiryDate.getMonth() + item.expiryMonths);
-
-            const totalDays = (expiryDate - prodDate) / (1000 * 60 * 60 * 24);
-            const passedDays = (new Date() - prodDate) / (1000 * 60 * 60 * 24);
-            return passedDays >= (totalDays / 2);
-        }
-
-        function saveItemData() {
-            if (selectedItemIndex === null) return;
-
-            const actualQty = parseFloat(document.getElementById("modalActualQty").value) || 0;
-            const prodDate = document.getElementById("modalProdDate").value;
-
-            items[selectedItemIndex].actualQty = actualQty;
-            items[selectedItemIndex].prodDate = prodDate;
-            items[selectedItemIndex].isScanned = true;
-
-            closeModal();
-            renderTable();
-        }
-
-        // Summary Report
-        function toggleSummaryModal() {
-            const modal = document.getElementById("summaryModal");
-            if (modal.classList.contains("hidden")) {
-                renderSummaryReport();
-                modal.classList.remove("hidden");
-            } else {
-                modal.classList.add("hidden");
-            }
-        }
-
-        function renderSummaryReport() {
-            const rptTable = document.getElementById("summaryReportTable");
-            rptTable.innerHTML = "";
-
-            let scannedCount = 0;
-            let halfLifeCount = 0;
-
-            items.forEach(item => {
-                if (item.isScanned) scannedCount++;
-                if (checkHalfLifePassed(item)) halfLifeCount++;
-
-                const diff = item.actualQty - item.dispatchedQty;
-                let diffBadge = '<span class="text-gray-500 font-bold">مطابق</span>';
-
-                if (item.isScanned) {
-                    if (diff > 0) diffBadge = `<span class="text-blue-600 font-bold">+${diff} زيادة</span>`;
-                    else if (diff < 0) diffBadge = `<span class="text-red-600 font-bold">${diff} عجز</span>`;
-                }
-
-                const tr = document.createElement("tr");
+            // Render Table 3: Expiry Warnings
+            const tbody3 = document.getElementById('expiryTableBody');
+            tbody3.innerHTML = '';
+            currentItems.filter(i => i.status === 'Received' && i.expiry).forEach(item => {
+                const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-2 font-bold">${item.name}</td>
-                    <td class="p-2 text-center">${item.dispatchedQty}</td>
-                    <td class="p-2 text-center font-bold">${item.isScanned ? item.actualQty : '-'}</td>
-                    <td class="p-2 text-center">${diffBadge}</td>
-                    <td class="p-2 text-center">
-                        ${item.isScanned ? '<span class="text-green-600 font-bold">تم الاستلام</span>' : '<span class="text-amber-600">لم يستلم</span>'}
-                    </td>
+                    <td class="p-3 font-bold">${item.name}</td>
+                    <td class="p-3 font-mono">${item.expiry}</td>
+                    <td class="p-3 font-bold">${item.shelfLifeYears} سنة</td>
+                    <td class="p-3 font-bold text-emerald-600">سارية وأكثر من نصف المدة</td>
                 `;
-                rptTable.appendChild(tr);
+                tbody3.appendChild(tr);
             });
+        }
 
-            document.getElementById("rptTotalItems").innerText = items.length;
-            document.getElementById("rptScannedItems").innerText = scannedCount;
-            document.getElementById("rptHalfLifeCount").innerText = halfLifeCount;
+        function switchTab(tabId) {
+            ['itemsTab', 'discrepancyTab', 'expiryTab'].forEach(t => {
+                document.getElementById(t).classList.add('hidden');
+                document.getElementById(t + 'Btn').className = "py-3 px-4 font-bold border-b-2 border-transparent text-slate-500 hover:text-slate-800";
+            });
+            document.getElementById(tabId).classList.remove('hidden');
+            document.getElementById(tabId + 'Btn').className = "py-3 px-4 font-bold border-b-2 border-fathalla text-fathalla";
+        }
+
+        // Camera Scanner Functions
+        function openCameraScanner() {
+            document.getElementById('cameraModal').classList.remove('hidden');
+            html5QrcodeScanner = new Html5Qrcode("reader");
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText) => {
+                    closeCameraScanner();
+                    const match = currentItems.find(i => i.barcode === decodedText || i.barcode.endsWith(decodedText));
+                    if(match) openActionModal(match.id);
+                }
+            );
+        }
+
+        function closeCameraScanner() {
+            if(html5QrcodeScanner) {
+                html5QrcodeScanner.stop().then(() => {
+                    document.getElementById('cameraModal').classList.add('hidden');
+                });
+            } else {
+                document.getElementById('cameraModal').classList.add('hidden');
+            }
         }
     </script>
 </body>
