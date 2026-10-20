@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أسواق فتح الله ماركت - نظام استلام التحويلات</title>
+    <title>أسواق فتح الله ماركت - نظام استلام التحويلات المطور</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -54,7 +54,7 @@
                 </div>
                 <div>
                     <h1 class="font-extrabold text-lg leading-tight">أسواق فتح الله ماركت</h1>
-                    <p class="text-xs opacity-90">نظام استلام التحويلات المطور</p>
+                    <p class="text-xs opacity-90">نظام استلام التحويلات - الإصدار الاحترافي</p>
                 </div>
             </div>
 
@@ -64,21 +64,21 @@
         </div>
     </header>
 
-    <!-- Main Content Container -->
+    <!-- Main Container -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-6">
 
         <!-- Gateway / Document Setup -->
         <section id="uploadGateway" class="bg-card rounded-2xl shadow-xl border-2 border-dashed border-orange-300 p-6 md:p-8 text-center my-auto max-w-2xl mx-auto w-full no-print">
-            <h2 class="text-2xl font-extrabold mb-1">بيانات إذن التحويل والتفريغ</h2>
-            <p class="text-slate-500 text-sm mb-6">يرجى مراجعة وتأكيد تاريخ الاستلام لحساب الصلاحيات بدقة</p>
+            <h2 class="text-2xl font-extrabold mb-1">تسجيل إذن التحويل وفرز البيانات</h2>
+            <p class="text-slate-500 text-sm mb-6">يرجى تحديد بيانات إذن الصرف وتاريخ الاستلام المرجعي بدقة</p>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right mb-6 bg-secondary-card p-4 rounded-xl border border-orange-200">
                 <div>
-                    <label class="block text-xs font-bold mb-1">رقم إذن التحويل *</label>
+                    <label class="block text-xs font-bold mb-1">رقم إذن التحويل / الصرف *</label>
                     <input type="text" id="inputDocNo" value="TR-3285" class="w-full border rounded-lg p-2 text-sm text-black focus:outline-none">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold mb-1">تاريخ إذن الاستلام (المرجع للحساب) *</label>
+                    <label class="block text-xs font-bold mb-1">تاريخ إذن الاستلام (المرجع الزمني) *</label>
                     <input type="date" id="inputRecDate" class="w-full border rounded-lg p-2 text-sm text-black focus:outline-none font-bold text-orange-600">
                 </div>
                 <div>
@@ -99,7 +99,7 @@
             
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
                 <button onclick="document.getElementById('excelFileInput').click()" class="bg-primary text-white px-8 py-3.5 rounded-xl font-bold shadow-lg text-lg">
-                    اختيار ملف شيت التحويل (Excel)
+                    اختيار شيت إكسيل إذن الصرف
                 </button>
                 <button onclick="loadDemoData()" class="bg-slate-200 text-slate-800 px-6 py-3.5 rounded-xl font-semibold">
                     تجربة شيت تجريبي (إذن 3285)
@@ -110,8 +110,8 @@
         <!-- Expiry Mode Modal -->
         <div id="modeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
             <div class="bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 text-center border border-orange-300">
-                <h3 class="text-xl font-bold mb-2">نوع الإذن والمراجعة</h3>
-                <p class="text-slate-500 text-sm mb-6">هل يتطلب الإذن تسجيل ومراجعة صلاحيات الأصناف؟</p>
+                <h3 class="text-xl font-bold mb-2">طبيعة إذن التحويل</h3>
+                <p class="text-slate-500 text-sm mb-6">هل يتطلب تفريغ الإذن تسجيل ومراجعة تواريخ الصلاحية؟</p>
                 <div class="grid grid-cols-2 gap-4">
                     <button onclick="setExpiryMode(true)" class="bg-primary text-white py-3 rounded-xl font-bold shadow">نعم (بصلاحية)</button>
                     <button onclick="setExpiryMode(false)" class="bg-slate-300 text-slate-800 py-3 rounded-xl font-bold">لا (بدون صلاحية)</button>
@@ -153,10 +153,10 @@
                         <thead class="bg-secondary-card font-bold border-b">
                             <tr>
                                 <th class="p-3">#</th>
-                                <th class="p-3">الباركود الدولي (12-14 رقم)</th>
+                                <th class="p-3">الباركود الدولي (EAN)</th>
                                 <th class="p-3">اسم الصنف</th>
-                                <th class="p-3">المطلوب</th>
-                                <th class="p-3">المستلم</th>
+                                <th class="p-3">كمية الصرف</th>
+                                <th class="p-3">المستلم الفعلي</th>
                                 <th class="p-3">الحالة</th>
                                 <th class="p-3">تقييم الصلاحية</th>
                                 <th class="p-3">إجراء</th>
@@ -176,7 +176,7 @@
                             <tr>
                                 <th class="p-3">الباركود الدولي</th>
                                 <th class="p-3">الصنف</th>
-                                <th class="p-3">المطلوب</th>
+                                <th class="p-3">كمية الصرف</th>
                                 <th class="p-3">المستلم</th>
                                 <th class="p-3">الفارق</th>
                                 <th class="p-3">النوع</th>
@@ -189,7 +189,7 @@
 
             <!-- Tab 3: Expiry Warnings -->
             <div id="expiryWarningTab" class="hidden bg-card rounded-2xl shadow-md border border-slate-200 p-4">
-                <h3 class="font-extrabold text-lg mb-1 text-red-600">تقرير تحذيرات الصلاحية مقارنة بتاريخ الإذن</h3>
+                <h3 class="font-extrabold text-lg mb-1 text-red-600">تقرير تحذيرات الصلاحية (مقارنة بتاريخ الاستلام)</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-right text-sm">
                         <thead class="bg-slate-200 text-slate-800 font-bold">
@@ -197,7 +197,7 @@
                                 <th class="p-3">اسم الصنف</th>
                                 <th class="p-3">الباركود الدولي</th>
                                 <th class="p-3">تاريخ الانتهاء</th>
-                                <th class="p-3">مدة الصلاحية الكلية</th>
+                                <th class="p-3">مدة الصلاحية</th>
                                 <th class="p-3">حالة الصلاحية والحساب</th>
                             </tr>
                         </thead>
@@ -217,7 +217,7 @@
                 </div>
                 <div class="text-left font-mono text-sm">
                     <p>رقم الإذن: <span id="printDocNo" class="font-bold">--</span></p>
-                    <p>تاريخ الاستلام المرجعي: <span id="printRecDate">--</span></p>
+                    <p>تاريخ الاستلام: <span id="printRecDate">--</span></p>
                 </div>
             </div>
 
@@ -234,7 +234,7 @@
                         <th class="p-1 border">م</th>
                         <th class="p-1 border">الباركود الدولي</th>
                         <th class="p-1 border">اسم الصنف</th>
-                        <th class="p-1 border">المطلوب</th>
+                        <th class="p-1 border">كمية الصرف</th>
                         <th class="p-1 border">المستلم</th>
                         <th class="p-1 border">الفارق</th>
                         <th class="p-1 border">تاريخ الانتهاء</th>
@@ -265,10 +265,19 @@
 
     </main>
 
+    <!-- Custom Modal for Notifications instead of alert() -->
+    <div id="customModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
+        <div class="bg-card rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center border border-orange-300 space-y-4">
+            <h3 id="modalTitle" class="text-lg font-extrabold text-orange-600">تنبيه النظام</h3>
+            <p id="modalMessage" class="text-sm font-semibold">--</p>
+            <button onclick="closeCustomModal()" class="w-full bg-primary text-white py-2.5 rounded-xl font-bold">موافق</button>
+        </div>
+    </div>
+
     <!-- Modal Form for Item Receiving -->
     <div id="actionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
         <div class="bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 text-right relative border border-orange-300">
-            <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400">✕</button>
+            <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 font-bold">✕</button>
             
             <h3 id="modalItemName" class="text-xl font-extrabold my-2">--</h3>
             <p class="text-xs text-slate-500 mb-4">الباركود الدولي: <span id="modalItemBarcode" class="font-mono">--</span></p>
@@ -313,6 +322,16 @@
 
         document.getElementById('inputRecDate').valueAsDate = new Date();
 
+        function showCustomMsg(title, msg) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = msg;
+            document.getElementById('customModal').classList.remove('hidden');
+        }
+
+        function closeCustomModal() {
+            document.getElementById('customModal').classList.add('hidden');
+        }
+
         function toggleTheme() {
             isDarkMode = !isDarkMode;
             if(isDarkMode) {
@@ -326,7 +345,7 @@
             }
         }
 
-        // Strict Barcode Parser (EAN-13: 12 to 14 digits ONLY)
+        // Strict Excel Parser: Grabs EAN Barcode (12-14 digits) and Correct Transfer Issue Qty
         document.getElementById('excelFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -343,25 +362,38 @@
                         const row = rawRows[r];
                         if (!row || row.length === 0) continue;
 
-                        let barcode = "", name = "", qty = 0;
+                        let barcode = "";
+                        let name = "";
+                        let issueQty = 0;
+
                         row.forEach(cell => {
                             const val = String(cell).trim();
-                            // Strict EAN Barcode Matching (12 to 14 digits only)
+                            // Strict EAN Barcode Matching (12 to 14 digits)
                             if (/^\d{12,14}$/.test(val)) {
                                 barcode = val;
                             } else if (isNaN(val) && val.length > 3 && !name) {
                                 name = val;
-                            } else if (!isNaN(val) && parseFloat(val) > 0 && barcode && qty === 0) {
-                                qty = parseFloat(val);
+                            } else if (!isNaN(val) && parseFloat(val) > 0 && barcode && issueQty === 0) {
+                                issueQty = parseFloat(val);
                             }
                         });
+
+                        // Fallback if qty wasn't captured right after barcode
+                        if (barcode && issueQty === 0) {
+                            row.forEach(cell => {
+                                const val = parseFloat(cell);
+                                if (!isNaN(val) && val > 0 && val < 10000 && issueQty === 0) {
+                                    issueQty = val;
+                                }
+                            });
+                        }
 
                         if (barcode !== "") {
                             currentItems.push({
                                 id: currentItems.length,
                                 barcode: barcode,
-                                name: name || 'صنف غير معرف',
-                                reqQty: qty || 1,
+                                name: name || 'صنف تحويل مخزني',
+                                reqQty: issueQty > 0 ? issueQty : 1,
                                 recQty: 0,
                                 status: 'Unreceived',
                                 expiry: '',
@@ -372,7 +404,7 @@
                     }
 
                     if(currentItems.length === 0) {
-                        alert("لم نتمكن من العثور على أعمدة باركود دولي صحيح (12 إلى 14 رقم) في هذا الشيت.");
+                        showCustomMsg("تنبيه", "لم يتم العثور على باركود دولي صحيح (12-14 رقم) في الشيت.");
                         return;
                     }
 
@@ -380,7 +412,7 @@
                     document.getElementById('modeModal').classList.remove('hidden');
 
                 } catch(err) {
-                    alert("خطأ أثناء قراءة ملف الإكسيل!");
+                    showCustomMsg("خطأ", "فشل قراءة ملف الإكسيل: " + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
@@ -436,7 +468,7 @@
             });
         }
 
-        // Strict Inventory Expiry Evaluation relative to Document Receiving Date
+        // Expiry Evaluation Engine relative to Receiving Document Date
         function evaluateExpiryStatus(expiryStr, years) {
             if(!expiryStr) return { status: 'غير مسجل', badgeClass: 'bg-slate-100 text-slate-600' };
 
@@ -446,12 +478,12 @@
             const [expYear, expMonth] = expiryStr.split('-').map(Number);
             const expDateObj = new Date(expYear, expMonth - 1, 1);
 
-            // 1. Expired Check (If expiry date is before the Receiving Document Date)
+            // 1. Expired Check
             if (expDateObj < new Date(recDateObj.getFullYear(), recDateObj.getMonth(), 1)) {
                 return { status: 'منتهي الصلاحية ❌', badgeClass: 'bg-red-600 text-white font-bold' };
             }
 
-            // 2. Precise Half-Life Calculation (Remaining Months vs Total Shelf-Life Months)
+            // 2. Half-Life Calculation
             const totalShelfMonths = years * 12;
             const remainingMonths = (expDateObj.getFullYear() - recDateObj.getFullYear()) * 12 + (expDateObj.getMonth() - recDateObj.getMonth());
 
