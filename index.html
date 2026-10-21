@@ -3,37 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أسواق فتح الله ماركت - نظام استلام التحويلات المطور</title>
+    <title>أسواق فتح الله ماركت - نظام استلام التحويلات</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
     <!-- SheetJS (XLSX) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <!-- Google Fonts: Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 
     <style>
-        body { font-family: 'Cairo', sans-serif; transition: background-color 0.3s, color 0.3s; }
-        
-        /* Light Theme */
-        .theme-light { background-color: #f8fafc; color: #1e293b; }
-        .theme-light .bg-primary { background-color: #ea580c; }
-        .theme-light .text-primary { color: #ea580c; }
-        .theme-light .bg-card { background-color: #ffffff; }
-        .theme-light .bg-secondary-card { background-color: #fff7ed; }
-
-        /* Dark Theme (Navy / Kohl) */
-        .theme-dark { background-color: #0f172a; color: #f8fafc; }
-        .theme-dark .bg-primary { background-color: #1e3a8a; }
-        .theme-dark .text-primary { color: #60a5fa; }
-        .theme-dark .bg-card { background-color: #1e293b; }
-        .theme-dark .bg-secondary-card { background-color: #172554; }
-        .theme-dark table th { background-color: #172554; color: #93c5fd; }
-        .theme-dark table td { border-color: #334155; }
-
+        body { font-family: 'Cairo', sans-serif; }
+        .bg-primary { background-color: #ea580c; }
+        .text-primary { color: #ea580c; }
         @media print {
-            body { background: white !important; color: black !important; font-size: 11pt; }
             .no-print { display: none !important; }
             .print-only { display: block !important; }
             table { width: 100% !important; border-collapse: collapse !important; }
@@ -41,272 +23,171 @@
         }
     </style>
 </head>
-<body class="theme-light min-h-screen flex flex-col">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col p-4">
 
     <!-- Header -->
-    <header class="bg-primary text-white shadow-lg sticky top-0 z-30 no-print">
-        <div class="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
-            <div class="flex items-center space-x-3 space-x-reverse">
-                <div class="bg-white p-1.5 rounded-xl shadow-md w-11 h-11 flex items-center justify-center border border-orange-200">
-                    <svg class="w-8 h-8 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="font-extrabold text-lg leading-tight">أسواق فتح الله ماركت</h1>
-                    <p class="text-xs opacity-90">نظام استلام التحويلات - الإصدار الاحترافي</p>
-                </div>
+    <header class="bg-primary text-white p-4 rounded-2xl shadow-xl flex justify-between items-center mb-6 max-w-6xl mx-auto w-full no-print">
+        <div class="flex items-center space-x-3 space-x-reverse">
+            <div class="bg-white text-orange-600 font-black rounded-xl p-2 text-xl shadow">F</div>
+            <div>
+                <h1 class="font-extrabold text-lg">أسواق فتح الله ماركت</h1>
+                <p class="text-xs text-orange-100">نظام استلام وتفريغ التحويلات (معالجة الشيتات والصلاحيات)</p>
             </div>
-
-            <button onclick="toggleTheme()" class="bg-black/20 hover:bg-black/30 text-white p-2 rounded-xl text-xs font-bold border border-white/20">
-                <span id="themeBtnText">الوضع المظلم 🌙</span>
-            </button>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 flex flex-col gap-6">
+    <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-6">
 
-        <!-- Gateway / Document Setup -->
-        <section id="uploadGateway" class="bg-card rounded-2xl shadow-xl border-2 border-dashed border-orange-300 p-6 md:p-8 text-center my-auto max-w-2xl mx-auto w-full no-print">
-            <h2 class="text-2xl font-extrabold mb-1">تسجيل إذن التحويل وفرز البيانات</h2>
-            <p class="text-slate-500 text-sm mb-6">يرجى تحديد بيانات إذن الصرف وتاريخ الاستلام المرجعي بدقة</p>
+        <!-- Gateway / Setup -->
+        <section id="uploadGateway" class="bg-slate-800 rounded-2xl p-6 md:p-8 text-center max-w-2xl mx-auto w-full border border-slate-700 shadow-2xl no-print">
+            <h2 class="text-2xl font-extrabold mb-1 text-orange-400">بيانات إذن التحويل والتفريغ</h2>
+            <p class="text-slate-400 text-xs mb-6">يتم قراءة الكمية الفعلية والباركود مباشرة من شيت إذن الصرف</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right mb-6 bg-secondary-card p-4 rounded-xl border border-orange-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right mb-6 bg-slate-900/60 p-4 rounded-xl border border-slate-700 text-xs">
                 <div>
-                    <label class="block text-xs font-bold mb-1">رقم إذن التحويل / الصرف *</label>
-                    <input type="text" id="inputDocNo" value="TR-3285" class="w-full border rounded-lg p-2 text-sm text-black focus:outline-none">
+                    <label class="block font-bold mb-1">رقم إذن التحويل *</label>
+                    <input type="text" id="inputDocNo" value="3285" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white font-bold">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold mb-1">تاريخ إذن الاستلام (المرجع الزمني) *</label>
-                    <input type="date" id="inputRecDate" class="w-full border rounded-lg p-2 text-sm text-black focus:outline-none font-bold text-orange-600">
+                    <label class="block font-bold mb-1">تاريخ إذن الاستلام المرجعي *</label>
+                    <input type="date" id="inputRecDate" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-orange-400 font-bold">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold mb-1">فرع الصرف (الراسل) *</label>
-                    <input type="text" id="inputSenderBranch" value="مخزن أبيس الرئيسي" class="w-full border rounded-lg p-2 text-sm text-black focus:outline-none">
+                    <label class="block font-bold mb-1">فرع الصرف *</label>
+                    <input type="text" id="inputSenderBranch" value="فرع سموحة" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold mb-1">فرع الاستلام (المستقبل) *</label>
-                    <input type="text" id="inputReceiverBranch" value="فرع سموحة" class="w-full border rounded-lg p-2 text-sm text-black focus:outline-none">
+                    <label class="block font-bold mb-1">فرع الاستلام *</label>
+                    <input type="text" id="inputReceiverBranch" value="عجمى ستار مخزن نيو لوجيستيك 21" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
                 </div>
                 <div class="md:col-span-2">
-                    <label class="block text-xs font-bold mb-1">اسم أمين المخزن / المستلم *</label>
-                    <input type="text" id="inputReceiverName" value="عصام بدري" class="w-full border rounded-lg p-2 text-sm text-black focus:outline-none">
+                    <label class="block font-bold mb-1">اسم مسئول الاستلام *</label>
+                    <input type="text" id="inputReceiverName" value="عصام بدري" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
                 </div>
             </div>
 
             <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
             
             <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button onclick="document.getElementById('excelFileInput').click()" class="bg-primary text-white px-8 py-3.5 rounded-xl font-bold shadow-lg text-lg">
-                    اختيار شيت إكسيل إذن الصرف
-                </button>
-                <button onclick="loadDemoData()" class="bg-slate-200 text-slate-800 px-6 py-3.5 rounded-xl font-semibold">
-                    تجربة شيت تجريبي (إذن 3285)
+                <button onclick="document.getElementById('excelFileInput').click()" class="bg-primary text-white px-8 py-3.5 rounded-xl font-bold shadow-lg text-base hover:bg-orange-600 transition">
+                    تحميل شيت إذن الصرف (Excel)
                 </button>
             </div>
         </section>
 
-        <!-- Expiry Mode Modal -->
-        <div id="modeModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-            <div class="bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 text-center border border-orange-300">
-                <h3 class="text-xl font-bold mb-2">طبيعة إذن التحويل</h3>
-                <p class="text-slate-500 text-sm mb-6">هل يتطلب تفريغ الإذن تسجيل ومراجعة تواريخ الصلاحية؟</p>
-                <div class="grid grid-cols-2 gap-4">
-                    <button onclick="setExpiryMode(true)" class="bg-primary text-white py-3 rounded-xl font-bold shadow">نعم (بصلاحية)</button>
-                    <button onclick="setExpiryMode(false)" class="bg-slate-300 text-slate-800 py-3 rounded-xl font-bold">لا (بدون صلاحية)</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Main Workspace -->
+        <!-- Workspace -->
         <div id="workspace" class="hidden flex-col gap-6 no-print">
 
-            <div class="bg-card rounded-2xl p-4 shadow-md border border-slate-200 flex flex-col md:flex-row gap-4 justify-between items-center">
+            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col md:flex-row gap-4 justify-between items-center shadow-lg">
                 <div class="relative w-full md:w-2/3">
-                    <input type="text" id="barcodeSearchInput" placeholder="ادخل آخر 4 أرقام من الباركود الدولي للتمرير التلقائي..." 
-                           class="w-full bg-slate-50 text-slate-900 border-2 border-orange-300 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none">
+                    <input type="text" id="barcodeSearchInput" placeholder="مسح الباركود أو إدخال آخر 4 أرقام للتمرير التلقائي..." 
+                           class="w-full bg-slate-900 text-white border-2 border-orange-500 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none">
                 </div>
                 
-                <button onclick="triggerOfficialPrint()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl font-extrabold flex items-center justify-center gap-2 shadow-lg w-full md:w-auto">
-                    إنهاء وطباعة التقرير الرسمى 🖨️
+                <button onclick="triggerOfficialPrint()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-extrabold shadow-lg w-full md:w-auto">
+                    إنهاء وطباعة التقرير 🖨️
                 </button>
             </div>
 
-            <!-- Tabs Navigation -->
-            <div class="flex border-b border-slate-300 space-x-2 space-x-reverse overflow-x-auto">
-                <button onclick="switchTab('itemsTab')" id="itemsTabBtn" class="py-3 px-4 font-bold border-b-2 border-orange-500 text-primary">
-                    جدول استلام الأصناف
-                </button>
-                <button onclick="switchTab('discrepancyTab')" id="discrepancyTabBtn" class="py-3 px-4 font-bold border-b-2 border-transparent text-slate-500">
-                    تقرير الاختلافات (العجز والزيادة)
-                </button>
-                <button onclick="switchTab('expiryWarningTab')" id="expiryWarningTabBtn" class="py-3 px-4 font-bold border-b-2 border-transparent text-slate-500">
-                    تقرير تحذيرات الصلاحية (نصف المدة والمنتهي)
-                </button>
-            </div>
-
-            <!-- Tab 1: All Items Table -->
-            <div id="itemsTab" class="bg-card rounded-2xl shadow-md border border-slate-200 overflow-hidden">
+            <!-- Items Table -->
+            <div class="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-secondary-card font-bold border-b">
+                    <table class="w-full text-right text-xs">
+                        <thead class="bg-slate-900 text-orange-400 font-bold border-b border-slate-700">
                             <tr>
-                                <th class="p-3">#</th>
-                                <th class="p-3">الباركود الدولي (EAN)</th>
+                                <th class="p-3">م</th>
+                                <th class="p-3">الباركود الدولي</th>
+                                <th class="p-3">كود الصنف</th>
                                 <th class="p-3">اسم الصنف</th>
-                                <th class="p-3">كمية الصرف</th>
-                                <th class="p-3">المستلم الفعلي</th>
-                                <th class="p-3">الحالة</th>
+                                <th class="p-3">الكمية الصادرة (من الإذن)</th>
+                                <th class="p-3">الكمية المستلمة</th>
                                 <th class="p-3">تقييم الصلاحية</th>
                                 <th class="p-3">إجراء</th>
                             </tr>
                         </thead>
-                        <tbody id="itemsTableBody" class="divide-y divide-slate-200"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tab 2: Discrepancies Report -->
-            <div id="discrepancyTab" class="hidden bg-card rounded-2xl shadow-md border border-slate-200 p-4">
-                <h3 class="font-extrabold text-lg mb-1 text-orange-600">تقرير فروقات الكميات (العجز والزيادة)</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-slate-200 text-slate-800 font-bold">
-                            <tr>
-                                <th class="p-3">الباركود الدولي</th>
-                                <th class="p-3">الصنف</th>
-                                <th class="p-3">كمية الصرف</th>
-                                <th class="p-3">المستلم</th>
-                                <th class="p-3">الفارق</th>
-                                <th class="p-3">النوع</th>
-                            </tr>
-                        </thead>
-                        <tbody id="discrepancyTableBody" class="divide-y divide-slate-200"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- Tab 3: Expiry Warnings -->
-            <div id="expiryWarningTab" class="hidden bg-card rounded-2xl shadow-md border border-slate-200 p-4">
-                <h3 class="font-extrabold text-lg mb-1 text-red-600">تقرير تحذيرات الصلاحية (مقارنة بتاريخ الاستلام)</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-sm">
-                        <thead class="bg-slate-200 text-slate-800 font-bold">
-                            <tr>
-                                <th class="p-3">اسم الصنف</th>
-                                <th class="p-3">الباركود الدولي</th>
-                                <th class="p-3">تاريخ الانتهاء</th>
-                                <th class="p-3">مدة الصلاحية</th>
-                                <th class="p-3">حالة الصلاحية والحساب</th>
-                            </tr>
-                        </thead>
-                        <tbody id="expiryWarningTableBody" class="divide-y divide-slate-200"></tbody>
+                        <tbody id="itemsTableBody" class="divide-y divide-slate-700"></tbody>
                     </table>
                 </div>
             </div>
 
         </div>
 
-        <!-- Printable Document -->
+        <!-- Printable Official Report (A4) -->
         <div id="printableDocument" class="hidden print-only bg-white text-black p-4">
             <div class="flex justify-between items-center border-b-2 border-black pb-4 mb-4">
                 <div class="text-right">
                     <h1 class="text-xl font-bold">أسواق فتح الله ماركت</h1>
-                    <h2 class="text-md font-semibold">محضر استلام تحويل رسمي بين الفروع</h2>
+                    <h2 class="text-sm font-semibold">تقرير استلام تحويل مخزني</h2>
                 </div>
-                <div class="text-left font-mono text-sm">
-                    <p>رقم الإذن: <span id="printDocNo" class="font-bold">--</span></p>
+                <div class="text-left font-mono text-xs">
+                    <p>رقم المستند: <span id="printDocNo" class="font-bold">--</span></p>
                     <p>تاريخ الاستلام: <span id="printRecDate">--</span></p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 text-sm border p-3 mb-4 bg-slate-50">
-                <p><strong>فرع الصرف (الراسل):</strong> <span id="printSenderBranch">--</span></p>
-                <p><strong>فرع الاستلام (المستقبل):</strong> <span id="printReceiverBranch">--</span></p>
-                <p><strong>أمين المخزن / المستلم:</strong> <span id="printReceiverName">--</span></p>
-                <p><strong>حالة الصلاحية المطلوبة:</strong> <span id="printExpiryMode">--</span></p>
+            <div class="grid grid-cols-2 gap-2 text-xs border p-3 mb-4 bg-slate-50">
+                <p><strong>فرع الصرف:</strong> <span id="printSenderBranch">--</span></p>
+                <p><strong>فرع الاستلام:</strong> <span id="printReceiverBranch">--</span></p>
+                <p><strong>مسئول الاستلام:</strong> <span id="printReceiverName">--</span></p>
             </div>
 
             <table class="w-full text-xs text-right border-collapse mb-6">
                 <thead>
                     <tr class="bg-slate-200">
                         <th class="p-1 border">م</th>
-                        <th class="p-1 border">الباركود الدولي</th>
+                        <th class="p-1 border">الباركود</th>
                         <th class="p-1 border">اسم الصنف</th>
-                        <th class="p-1 border">كمية الصرف</th>
-                        <th class="p-1 border">المستلم</th>
+                        <th class="p-1 border">الكمية الصادرة</th>
+                        <th class="p-1 border">الكمية المستلمة</th>
                         <th class="p-1 border">الفارق</th>
                         <th class="p-1 border">تاريخ الانتهاء</th>
-                        <th class="p-1 border">تقييم الصلاحية</th>
+                        <th class="p-1 border">حالة الصلاحية</th>
                     </tr>
                 </thead>
                 <tbody id="printTableBody"></tbody>
             </table>
 
-            <div class="grid grid-cols-3 gap-4 text-center text-xs mt-12 pt-4 border-t border-black">
-                <div>
-                    <p class="font-bold mb-8">أمين المخزن / المستلم</p>
-                    <p>الاسم: ........................</p>
-                    <p>التوقيع: ....................</p>
-                </div>
-                <div>
-                    <p class="font-bold mb-8">السائق / المندوب الناقل</p>
-                    <p>الاسم: ........................</p>
-                    <p>التوقيع: ....................</p>
-                </div>
-                <div>
-                    <p class="font-bold mb-8">اعتماد مسئول الجودة</p>
-                    <p>الاسم: ........................</p>
-                    <p>التوقيع: ....................</p>
-                </div>
+            <div class="mt-8 pt-4 border-t border-black text-sm font-bold text-left">
+                <p>توقيع مسئول الاستلام: ........................................</p>
             </div>
         </div>
 
     </main>
 
-    <!-- Custom Modal for Notifications instead of alert() -->
-    <div id="customModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-        <div class="bg-card rounded-2xl shadow-2xl max-w-sm w-full p-6 text-center border border-orange-300 space-y-4">
-            <h3 id="modalTitle" class="text-lg font-extrabold text-orange-600">تنبيه النظام</h3>
-            <p id="modalMessage" class="text-sm font-semibold">--</p>
-            <button onclick="closeCustomModal()" class="w-full bg-primary text-white py-2.5 rounded-xl font-bold">موافق</button>
-        </div>
-    </div>
-
-    <!-- Modal Form for Item Receiving -->
-    <div id="actionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-        <div class="bg-card rounded-2xl shadow-2xl max-w-md w-full p-6 text-right relative border border-orange-300">
-            <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 font-bold">✕</button>
+    <!-- Modal Form for Item Entry -->
+    <div id="actionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
+        <div class="bg-slate-800 text-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-right border border-orange-500/50 relative">
+            <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 text-lg font-bold">✕</button>
             
-            <h3 id="modalItemName" class="text-xl font-extrabold my-2">--</h3>
-            <p class="text-xs text-slate-500 mb-4">الباركود الدولي: <span id="modalItemBarcode" class="font-mono">--</span></p>
+            <h3 id="modalItemName" class="text-lg font-extrabold text-orange-400 my-1">--</h3>
+            <p class="text-xs text-slate-400 mb-4">الباركود: <span id="modalItemBarcode" class="font-mono">--</span></p>
 
             <form id="actionForm" onsubmit="saveItemReceiving(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold mb-1">الكمية المستلمة فعلياً</label>
-                    <input type="number" id="modalQtyInput" min="0" required class="w-full border-2 border-slate-300 rounded-xl p-3 text-xl font-bold text-center text-black">
+                    <input type="number" id="modalQtyInput" min="0" required class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-xl font-bold text-center text-white focus:outline-none focus:border-orange-500">
                 </div>
 
-                <div id="expiryFields" class="space-y-3">
+                <div class="space-y-3">
                     <div>
                         <label class="block text-xs font-bold mb-1">تاريخ الانتهاء (شهر / سنة)</label>
-                        <input type="month" id="modalExpiryInput" class="w-full border-2 border-slate-300 rounded-xl p-3 text-lg font-bold text-center text-black">
+                        <input type="month" id="modalExpiryInput" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-lg font-bold text-center text-orange-400 focus:outline-none">
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold mb-1">مدة الصلاحية الكلية للمنتج</label>
                         <div class="grid grid-cols-5 gap-1" id="shelfLifeSelector">
-                            <button type="button" onclick="setShelfLifeYears(1)" class="years-btn bg-slate-200 text-black py-2 rounded font-bold text-sm">1 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(2)" class="years-btn bg-orange-600 text-white py-2 rounded font-bold text-sm">2 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(3)" class="years-btn bg-slate-200 text-black py-2 rounded font-bold text-sm">3 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(4)" class="years-btn bg-slate-200 text-black py-2 rounded font-bold text-sm">4 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(5)" class="years-btn bg-slate-200 text-black py-2 rounded font-bold text-sm">5 سنة</button>
+                            <button type="button" onclick="setShelfLifeYears(1)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">1 سنة</button>
+                            <button type="button" onclick="setShelfLifeYears(2)" class="years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs">2 سنة</button>
+                            <button type="button" onclick="setShelfLifeYears(3)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">3 سنة</button>
+                            <button type="button" onclick="setShelfLifeYears(4)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">4 سنة</button>
+                            <button type="button" onclick="setShelfLifeYears(5)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">5 سنة</button>
                         </div>
                     </div>
                 </div>
 
-                <button type="submit" class="w-full bg-primary text-white py-3 rounded-xl font-bold shadow-lg mt-2">
+                <button type="submit" class="w-full bg-primary hover:bg-orange-600 text-white py-3 rounded-xl font-bold shadow-lg mt-2 transition">
                     حفظ وتأكيد الاستلام
                 </button>
             </form>
@@ -315,37 +196,12 @@
 
     <script>
         let currentItems = [];
-        let isExpiryRequired = true;
         let selectedItemIndex = null;
         let selectedShelfLifeYears = 2;
-        let isDarkMode = false;
 
         document.getElementById('inputRecDate').valueAsDate = new Date();
 
-        function showCustomMsg(title, msg) {
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerText = msg;
-            document.getElementById('customModal').classList.remove('hidden');
-        }
-
-        function closeCustomModal() {
-            document.getElementById('customModal').classList.add('hidden');
-        }
-
-        function toggleTheme() {
-            isDarkMode = !isDarkMode;
-            if(isDarkMode) {
-                document.body.classList.remove('theme-light');
-                document.body.classList.add('theme-dark');
-                document.getElementById('themeBtnText').innerText = "الوضع الفاتح ☀️";
-            } else {
-                document.body.classList.remove('theme-dark');
-                document.body.classList.add('theme-light');
-                document.getElementById('themeBtnText').innerText = "الوضع المظلم 🌙";
-            }
-        }
-
-        // Strict Excel Parser: Grabs EAN Barcode (12-14 digits) and Correct Transfer Issue Qty
+        // Reading Fathalla's Excel Sheet Layout
         document.getElementById('excelFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -358,42 +214,33 @@
                     const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1, defval: ""});
 
                     currentItems = [];
-                    for (let r = 0; r < rawRows.length; r++) {
-                        const row = rawRows[r];
-                        if (!row || row.length === 0) continue;
-
-                        let barcode = "";
-                        let name = "";
-                        let issueQty = 0;
-
-                        row.forEach(cell => {
-                            const val = String(cell).trim();
-                            // Strict EAN Barcode Matching (12 to 14 digits)
-                            if (/^\d{12,14}$/.test(val)) {
-                                barcode = val;
-                            } else if (isNaN(val) && val.length > 3 && !name) {
-                                name = val;
-                            } else if (!isNaN(val) && parseFloat(val) > 0 && barcode && issueQty === 0) {
-                                issueQty = parseFloat(val);
-                            }
-                        });
-
-                        // Fallback if qty wasn't captured right after barcode
-                        if (barcode && issueQty === 0) {
-                            row.forEach(cell => {
-                                const val = parseFloat(cell);
-                                if (!isNaN(val) && val > 0 && val < 10000 && issueQty === 0) {
-                                    issueQty = val;
-                                }
-                            });
+                    
+                    // Parse Header Metadata if Available
+                    for(let r = 0; r < 8; r++) {
+                        const rowStr = rawRows[r] ? rawRows[r].join(" ") : "";
+                        if(rowStr.includes("رقم المستند")) {
+                            const match = rowStr.match(/رقم المستند\s*:\s*(\d+)/);
+                            if(match) document.getElementById('inputDocNo').value = match[1];
                         }
+                    }
 
-                        if (barcode !== "") {
+                    // Parse Data Rows starting after header row (row index 9)
+                    for (let r = 9; r < rawRows.length; r++) {
+                        const row = rawRows[r];
+                        if (!row || row.length < 25) continue;
+
+                        const actualQty = parseFloat(row[0]); // Col 0: الكمية الفعلية (الصادرة من الإذن)
+                        const name = String(row[10]).trim();  // Col 10: اسم الصنف
+                        const barcode = String(row[23]).trim(); // Col 23: الباركود
+                        const itemCode = String(row[26]).trim(); // Col 26: كود الصنف
+
+                        if (barcode && barcode !== "" && !isNaN(actualQty)) {
                             currentItems.push({
                                 id: currentItems.length,
                                 barcode: barcode,
-                                name: name || 'صنف تحويل مخزني',
-                                reqQty: issueQty > 0 ? issueQty : 1,
+                                itemCode: itemCode,
+                                name: name || 'صنف غير معرف',
+                                reqQty: actualQty, // تخزين الكمية الصادرة
                                 recQty: 0,
                                 status: 'Unreceived',
                                 expiry: '',
@@ -404,38 +251,21 @@
                     }
 
                     if(currentItems.length === 0) {
-                        showCustomMsg("تنبيه", "لم يتم العثور على باركود دولي صحيح (12-14 رقم) في الشيت.");
+                        alert("لم نتمكن من استخراج بيانات تحويل صحيحة من هذا الشيت.");
                         return;
                     }
 
                     document.getElementById('uploadGateway').classList.add('hidden');
-                    document.getElementById('modeModal').classList.remove('hidden');
+                    document.getElementById('workspace').classList.remove('hidden');
+                    document.getElementById('workspace').classList.add('flex');
+                    renderTables();
 
                 } catch(err) {
-                    showCustomMsg("خطأ", "فشل قراءة ملف الإكسيل: " + err.message);
+                    alert("خطأ أثناء قراءة ملف الإكسيل: " + err.message);
                 }
             };
             reader.readAsArrayBuffer(file);
         });
-
-        function loadDemoData() {
-            currentItems = [
-                { id: 0, barcode: '622300012602', name: 'أرز الضحى 1 كجم', reqQty: 50, recQty: 0, status: 'Unreceived', expiry: '', shelfLifeYears: 2, expiryEvaluation: 'غير مسجل' },
-                { id: 1, barcode: '622100000049', name: 'زيت عباد الشمس كريستال 800 مل', reqQty: 30, recQty: 0, status: 'Unreceived', expiry: '', shelfLifeYears: 2, expiryEvaluation: 'غير مسجل' }
-            ];
-
-            document.getElementById('uploadGateway').classList.add('hidden');
-            document.getElementById('modeModal').classList.remove('hidden');
-        }
-
-        function setExpiryMode(required) {
-            isExpiryRequired = required;
-            document.getElementById('modeModal').classList.add('hidden');
-            document.getElementById('workspace').classList.remove('hidden');
-            document.getElementById('workspace').classList.add('flex');
-            document.getElementById('expiryFields').style.display = required ? 'block' : 'none';
-            renderTables();
-        }
 
         document.getElementById('barcodeSearchInput').addEventListener('input', function(e) {
             const val = e.target.value.trim();
@@ -464,26 +294,27 @@
         function setShelfLifeYears(years) {
             selectedShelfLifeYears = years;
             document.querySelectorAll('.years-btn').forEach((btn, idx) => {
-                btn.className = (idx + 1 === years) ? "years-btn bg-orange-600 text-white py-2 rounded font-bold text-sm" : "years-btn bg-slate-200 text-black py-2 rounded font-bold text-sm";
+                btn.className = (idx + 1 === years) ? "years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs" : "years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs";
             });
         }
 
-        // Expiry Evaluation Engine relative to Receiving Document Date
+        // Expiry Calculation Relative to Document Receiving Date
         function evaluateExpiryStatus(expiryStr, years) {
-            if(!expiryStr) return { status: 'غير مسجل', badgeClass: 'bg-slate-100 text-slate-600' };
+            if(!expiryStr) return { status: 'غير مسجل', badgeClass: 'bg-slate-700 text-slate-300' };
 
             const recDateVal = document.getElementById('inputRecDate').value;
             const recDateObj = recDateVal ? new Date(recDateVal) : new Date();
             
             const [expYear, expMonth] = expiryStr.split('-').map(Number);
             const expDateObj = new Date(expYear, expMonth - 1, 1);
+            const recCompareDate = new Date(recDateObj.getFullYear(), recDateObj.getMonth(), 1);
 
             // 1. Expired Check
-            if (expDateObj < new Date(recDateObj.getFullYear(), recDateObj.getMonth(), 1)) {
+            if (expDateObj <= recCompareDate) {
                 return { status: 'منتهي الصلاحية ❌', badgeClass: 'bg-red-600 text-white font-bold' };
             }
 
-            // 2. Half-Life Calculation
+            // 2. Remaining Months vs Total Shelf Months
             const totalShelfMonths = years * 12;
             const remainingMonths = (expDateObj.getFullYear() - recDateObj.getFullYear()) * 12 + (expDateObj.getMonth() - recDateObj.getMonth());
 
@@ -506,7 +337,7 @@
             currentItems[selectedItemIndex].shelfLifeYears = selectedShelfLifeYears;
             currentItems[selectedItemIndex].status = 'Received';
 
-            if(isExpiryRequired && expiry) {
+            if(expiry) {
                 const evalRes = evaluateExpiryStatus(expiry, selectedShelfLifeYears);
                 currentItems[selectedItemIndex].expiryEvaluation = evalRes.status;
             }
@@ -521,65 +352,21 @@
 
             currentItems.forEach((item, idx) => {
                 const isUnreceived = item.status === 'Unreceived';
-                const evalRes = isExpiryRequired ? evaluateExpiryStatus(item.expiry, item.shelfLifeYears) : { status: 'غير متطلب', badgeClass: 'bg-slate-100 text-slate-500' };
+                const evalRes = evaluateExpiryStatus(item.expiry, item.shelfLifeYears);
                 
                 tbody1.innerHTML += `
                     <tr>
                         <td class="p-3 font-bold">${idx + 1}</td>
-                        <td class="p-3 font-mono font-bold text-orange-500">${item.barcode}</td>
-                        <td class="p-3 font-bold">${item.name}</td>
-                        <td class="p-3 font-bold">${item.reqQty}</td>
-                        <td class="p-3 font-bold ${isUnreceived ? 'opacity-40' : 'text-emerald-500'}">${item.recQty}</td>
-                        <td class="p-3"><span class="px-2 py-1 rounded text-xs font-bold ${isUnreceived ? 'bg-slate-200 text-slate-700' : 'bg-emerald-100 text-emerald-800'}">${isUnreceived ? 'لم تُستلم' : 'تم الاستلام'}</span></td>
+                        <td class="p-3 font-mono font-bold text-orange-400">${item.barcode}</td>
+                        <td class="p-3 font-mono text-slate-400">${item.itemCode}</td>
+                        <td class="p-3 font-bold text-slate-200">${item.name}</td>
+                        <td class="p-3 font-bold text-slate-300">${item.reqQty}</td>
+                        <td class="p-3 font-bold ${isUnreceived ? 'opacity-40' : 'text-emerald-400'}">${item.recQty}</td>
                         <td class="p-3"><span class="px-2 py-1 rounded text-xs ${evalRes.badgeClass}">${evalRes.status}</span></td>
-                        <td class="p-3"><button onclick="openActionModal(${idx})" class="bg-orange-100 text-orange-800 px-3 py-1 rounded text-xs font-bold">استلام/تعديل</button></td>
+                        <td class="p-3"><button onclick="openActionModal(${idx})" class="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-3 py-1 rounded text-xs font-bold border border-orange-500/30">استلام / تعديل</button></td>
                     </tr>
                 `;
             });
-
-            const tbody2 = document.getElementById('discrepancyTableBody');
-            tbody2.innerHTML = '';
-            currentItems.filter(i => i.status === 'Received').forEach(item => {
-                const diff = item.recQty - item.reqQty;
-                if(diff !== 0) {
-                    tbody2.innerHTML += `
-                        <tr>
-                            <td class="p-3 font-mono">${item.barcode}</td>
-                            <td class="p-3 font-bold">${item.name}</td>
-                            <td class="p-3">${item.reqQty}</td>
-                            <td class="p-3 font-bold">${item.recQty}</td>
-                            <td class="p-3 font-bold ${diff < 0 ? 'text-red-500' : 'text-blue-500'}">${diff}</td>
-                            <td class="p-3 font-bold">${diff < 0 ? 'عجز' : 'زيادة'}</td>
-                        </tr>
-                    `;
-                }
-            });
-
-            const tbody3 = document.getElementById('expiryWarningTableBody');
-            tbody3.innerHTML = '';
-            currentItems.filter(i => i.status === 'Received' && i.expiry).forEach(item => {
-                const evalRes = evaluateExpiryStatus(item.expiry, item.shelfLifeYears);
-                if(evalRes.status.includes('تخطت') || evalRes.status.includes('منتهي')) {
-                    tbody3.innerHTML += `
-                        <tr>
-                            <td class="p-3 font-bold">${item.name}</td>
-                            <td class="p-3 font-mono">${item.barcode}</td>
-                            <td class="p-3 font-mono">${item.expiry}</td>
-                            <td class="p-3">${item.shelfLifeYears} سنة</td>
-                            <td class="p-3"><span class="px-2 py-1 rounded text-xs ${evalRes.badgeClass}">${evalRes.status}</span></td>
-                        </tr>
-                    `;
-                }
-            });
-        }
-
-        function switchTab(tabId) {
-            ['itemsTab', 'discrepancyTab', 'expiryWarningTab'].forEach(t => {
-                document.getElementById(t).classList.add('hidden');
-                document.getElementById(t + 'Btn').className = "py-3 px-4 font-bold border-b-2 border-transparent text-slate-500";
-            });
-            document.getElementById(tabId).classList.remove('hidden');
-            document.getElementById(tabId + 'Btn').className = "py-3 px-4 font-bold border-b-2 border-orange-500 text-primary";
         }
 
         function triggerOfficialPrint() {
@@ -588,7 +375,6 @@
             document.getElementById('printSenderBranch').innerText = document.getElementById('inputSenderBranch').value || '--';
             document.getElementById('printReceiverBranch').innerText = document.getElementById('inputReceiverBranch').value || '--';
             document.getElementById('printReceiverName').innerText = document.getElementById('inputReceiverName').value || '--';
-            document.getElementById('printExpiryMode').innerText = isExpiryRequired ? 'بصلاحية' : 'بدون صلاحية';
 
             const printTbody = document.getElementById('printTableBody');
             printTbody.innerHTML = '';
