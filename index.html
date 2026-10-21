@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (XLSX) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- HTML5 QRCode Scanner -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <!-- Google Fonts: Cairo -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
 
@@ -15,6 +17,7 @@
         body { font-family: 'Cairo', sans-serif; }
         .bg-primary { background-color: #ea580c; }
         .text-primary { color: #ea580c; }
+        #reader video { border-radius: 0.75rem; object-fit: cover; }
         @media print {
             .no-print { display: none !important; }
             .print-only { display: block !important; }
@@ -26,12 +29,13 @@
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col p-4">
 
     <!-- Header -->
-    <header class="bg-primary text-white p-4 rounded-2xl shadow-xl flex justify-between items-center mb-6 max-w-6xl mx-auto w-full no-print">
+    <header class="bg-slate-800 text-white p-4 rounded-2xl shadow-xl flex justify-between items-center mb-6 max-w-6xl mx-auto w-full border border-slate-700 no-print">
         <div class="flex items-center space-x-3 space-x-reverse">
-            <div class="bg-white text-orange-600 font-black rounded-xl p-2 text-xl shadow">F</div>
+            <!-- اللوجو المستدعى من الصورة المرفقة -->
+            <img src="63703.png" alt="Fathalla Logo" class="w-16 h-16 object-contain bg-slate-900 rounded-xl shadow-lg border border-orange-500/30 p-1">
             <div>
-                <h1 class="font-extrabold text-lg">أسواق فتح الله ماركت</h1>
-                <p class="text-xs text-orange-100">نظام استلام وتفريغ التحويلات (معالجة الشيتات والصلاحيات)</p>
+                <h1 class="font-extrabold text-xl text-orange-500 tracking-wide">أسواق فتح الله ماركت</h1>
+                <p class="text-xs text-slate-400 font-semibold mt-1">نظام استلام وتفريغ التحويلات (نسخة الجرد والصلاحيات)</p>
             </div>
         </div>
     </header>
@@ -47,23 +51,23 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right mb-6 bg-slate-900/60 p-4 rounded-xl border border-slate-700 text-xs">
                 <div>
                     <label class="block font-bold mb-1">رقم إذن التحويل *</label>
-                    <input type="text" id="inputDocNo" value="3285" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white font-bold">
+                    <input type="text" id="inputDocNo" value="3285" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white font-bold focus:outline-none focus:border-orange-500">
                 </div>
                 <div>
                     <label class="block font-bold mb-1">تاريخ إذن الاستلام المرجعي *</label>
-                    <input type="date" id="inputRecDate" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-orange-400 font-bold">
+                    <input type="date" id="inputRecDate" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-orange-400 font-bold focus:outline-none focus:border-orange-500">
                 </div>
                 <div>
                     <label class="block font-bold mb-1">فرع الصرف *</label>
-                    <input type="text" id="inputSenderBranch" value="فرع سموحة" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                    <input type="text" id="inputSenderBranch" value="فرع سموحة" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none">
                 </div>
                 <div>
                     <label class="block font-bold mb-1">فرع الاستلام *</label>
-                    <input type="text" id="inputReceiverBranch" value="عجمى ستار مخزن نيو لوجيستيك 21" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                    <input type="text" id="inputReceiverBranch" value="عجمى ستار مخزن نيو لوجيستيك 21" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none">
                 </div>
                 <div class="md:col-span-2">
                     <label class="block font-bold mb-1">اسم مسئول الاستلام *</label>
-                    <input type="text" id="inputReceiverName" value="عصام بدري" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white">
+                    <input type="text" id="inputReceiverName" value="عصام بدري" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none">
                 </div>
             </div>
 
@@ -79,15 +83,25 @@
         <!-- Workspace -->
         <div id="workspace" class="hidden flex-col gap-6 no-print">
 
+            <!-- Controls Panel -->
             <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col md:flex-row gap-4 justify-between items-center shadow-lg">
-                <div class="relative w-full md:w-2/3">
-                    <input type="text" id="barcodeSearchInput" placeholder="مسح الباركود أو إدخال آخر 4 أرقام للتمرير التلقائي..." 
-                           class="w-full bg-slate-900 text-white border-2 border-orange-500 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none">
+                <div class="relative w-full md:w-2/3 flex gap-2">
+                    <input type="text" id="barcodeSearchInput" placeholder="ادخل آخر 4 أرقام للتمرير التلقائي..." 
+                           class="w-full bg-slate-900 text-white border-2 border-orange-500 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none placeholder:text-sm">
+                    <button onclick="startScanner()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-xl font-bold flex items-center gap-2 border border-slate-500 transition whitespace-nowrap">
+                        📷 كاميرا
+                    </button>
                 </div>
                 
-                <button onclick="triggerOfficialPrint()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-extrabold shadow-lg w-full md:w-auto">
+                <button onclick="triggerOfficialPrint()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-extrabold shadow-lg w-full md:w-auto transition">
                     إنهاء وطباعة التقرير 🖨️
                 </button>
+            </div>
+
+            <!-- Scanner Container -->
+            <div id="scanner-container" class="hidden bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-xl relative max-w-lg mx-auto w-full">
+                <button onclick="closeScanner()" class="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full font-bold z-10">✕</button>
+                <div id="reader" class="w-full h-auto"></div>
             </div>
 
             <!-- Items Table -->
@@ -98,10 +112,11 @@
                             <tr>
                                 <th class="p-3">م</th>
                                 <th class="p-3">الباركود الدولي</th>
-                                <th class="p-3">كود الصنف</th>
                                 <th class="p-3">اسم الصنف</th>
-                                <th class="p-3">الكمية الصادرة (من الإذن)</th>
-                                <th class="p-3">الكمية المستلمة</th>
+                                <th class="p-3">الكمية المصدرة</th>
+                                <th class="p-3">المستلمة</th>
+                                <th class="p-3">الإنتاج</th>
+                                <th class="p-3">الانتهاء</th>
                                 <th class="p-3">تقييم الصلاحية</th>
                                 <th class="p-3">إجراء</th>
                             </tr>
@@ -110,15 +125,17 @@
                     </table>
                 </div>
             </div>
-
         </div>
 
-        <!-- Printable Official Report (A4) -->
+        <!-- Printable Report (A4) -->
         <div id="printableDocument" class="hidden print-only bg-white text-black p-4">
             <div class="flex justify-between items-center border-b-2 border-black pb-4 mb-4">
-                <div class="text-right">
-                    <h1 class="text-xl font-bold">أسواق فتح الله ماركت</h1>
-                    <h2 class="text-sm font-semibold">تقرير استلام تحويل مخزني</h2>
+                <div class="text-right flex items-center gap-3">
+                    <img src="63703.png" alt="Logo" class="w-12 h-12 object-contain grayscale">
+                    <div>
+                        <h1 class="text-xl font-bold">أسواق فتح الله ماركت</h1>
+                        <h2 class="text-sm font-semibold">تقرير استلام تحويل مخزني</h2>
+                    </div>
                 </div>
                 <div class="text-left font-mono text-xs">
                     <p>رقم المستند: <span id="printDocNo" class="font-bold">--</span></p>
@@ -139,9 +156,9 @@
                         <th class="p-1 border">الباركود</th>
                         <th class="p-1 border">اسم الصنف</th>
                         <th class="p-1 border">الكمية الصادرة</th>
-                        <th class="p-1 border">الكمية المستلمة</th>
+                        <th class="p-1 border">المستلمة</th>
                         <th class="p-1 border">الفارق</th>
-                        <th class="p-1 border">تاريخ الانتهاء</th>
+                        <th class="p-1 border">الإنتاج</th>
                         <th class="p-1 border">حالة الصلاحية</th>
                     </tr>
                 </thead>
@@ -158,7 +175,7 @@
     <!-- Modal Form for Item Entry -->
     <div id="actionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
         <div class="bg-slate-800 text-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-right border border-orange-500/50 relative">
-            <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 text-lg font-bold">✕</button>
+            <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 text-lg font-bold hover:text-white">✕</button>
             
             <h3 id="modalItemName" class="text-lg font-extrabold text-orange-400 my-1">--</h3>
             <p class="text-xs text-slate-400 mb-4">الباركود: <span id="modalItemBarcode" class="font-mono">--</span></p>
@@ -171,15 +188,15 @@
 
                 <div class="space-y-3">
                     <div>
-                        <label class="block text-xs font-bold mb-1">تاريخ الانتهاء (شهر / سنة)</label>
-                        <input type="month" id="modalExpiryInput" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-lg font-bold text-center text-orange-400 focus:outline-none">
+                        <label class="block text-xs font-bold mb-1">تاريخ الإنتاج المطبوع (شهر / سنة)</label>
+                        <input type="month" id="modalProdInput" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-lg font-bold text-center text-orange-400 focus:outline-none">
                     </div>
                     
                     <div>
                         <label class="block text-xs font-bold mb-1">مدة الصلاحية الكلية للمنتج</label>
                         <div class="grid grid-cols-5 gap-1" id="shelfLifeSelector">
                             <button type="button" onclick="setShelfLifeYears(1)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">1 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(2)" class="years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs">2 سنة</button>
+                            <button type="button" onclick="setShelfLifeYears(2)" class="years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs shadow-md shadow-orange-500/30">2 سنة</button>
                             <button type="button" onclick="setShelfLifeYears(3)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">3 سنة</button>
                             <button type="button" onclick="setShelfLifeYears(4)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">4 سنة</button>
                             <button type="button" onclick="setShelfLifeYears(5)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">5 سنة</button>
@@ -197,11 +214,12 @@
     <script>
         let currentItems = [];
         let selectedItemIndex = null;
-        let selectedShelfLifeYears = 2;
+        let selectedShelfLifeYears = 2; // الافتراضي سنتين
+        let html5QrcodeScanner = null;
 
         document.getElementById('inputRecDate').valueAsDate = new Date();
 
-        // Reading Fathalla's Excel Sheet Layout
+        // 1. قراءة شيت الإكسيل (اعتماداً على الكمية الفعلية للصرف)
         document.getElementById('excelFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -215,7 +233,7 @@
 
                     currentItems = [];
                     
-                    // Parse Header Metadata if Available
+                    // قراءة بيانات الترويسة من أعلى الشيت
                     for(let r = 0; r < 8; r++) {
                         const rowStr = rawRows[r] ? rawRows[r].join(" ") : "";
                         if(rowStr.includes("رقم المستند")) {
@@ -224,15 +242,15 @@
                         }
                     }
 
-                    // Parse Data Rows starting after header row (row index 9)
+                    // قراءة الأصناف بداية من الصف 9
                     for (let r = 9; r < rawRows.length; r++) {
                         const row = rawRows[r];
                         if (!row || row.length < 25) continue;
 
-                        const actualQty = parseFloat(row[0]); // Col 0: الكمية الفعلية (الصادرة من الإذن)
-                        const name = String(row[10]).trim();  // Col 10: اسم الصنف
-                        const barcode = String(row[23]).trim(); // Col 23: الباركود
-                        const itemCode = String(row[26]).trim(); // Col 26: كود الصنف
+                        const actualQty = parseFloat(row[0]); // الكمية الفعلية الصادرة من المخزن الرئيسي
+                        const name = String(row[10]).trim();  
+                        const barcode = String(row[23]).trim(); 
+                        const itemCode = String(row[26]).trim(); 
 
                         if (barcode && barcode !== "" && !isNaN(actualQty)) {
                             currentItems.push({
@@ -240,10 +258,11 @@
                                 barcode: barcode,
                                 itemCode: itemCode,
                                 name: name || 'صنف غير معرف',
-                                reqQty: actualQty, // تخزين الكمية الصادرة
+                                reqQty: actualQty,
                                 recQty: 0,
                                 status: 'Unreceived',
-                                expiry: '',
+                                prodDate: '',
+                                expiryDate: '',
                                 shelfLifeYears: 2,
                                 expiryEvaluation: 'غير مسجل'
                             });
@@ -267,23 +286,59 @@
             reader.readAsArrayBuffer(file);
         });
 
+        // 2. البحث والتمرير التلقائي للباركود
         document.getElementById('barcodeSearchInput').addEventListener('input', function(e) {
-            const val = e.target.value.trim();
+            triggerSearch(e.target.value.trim());
+        });
+
+        function triggerSearch(val) {
             if(val.length >= 4) {
                 const matches = currentItems.filter(item => item.barcode.endsWith(val) || item.barcode === val);
                 if(matches.length === 1) {
                     openActionModal(matches[0].id);
-                    e.target.value = '';
+                    document.getElementById('barcodeSearchInput').value = '';
                 }
             }
-        });
+        }
 
+        // 3. مسح الباركود بالكاميرا
+        function startScanner() {
+            document.getElementById('scanner-container').classList.remove('hidden');
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { fps: 10, qrbox: {width: 250, height: 100}, aspectRatio: 1.0 }, 
+                false
+            );
+            html5QrcodeScanner.render(
+                function(decodedText) {
+                    closeScanner();
+                    triggerSearch(decodedText);
+                },
+                function(errorMessage) {
+                    // Ignore background errors
+                }
+            );
+        }
+
+        function closeScanner() {
+            if(html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+            document.getElementById('scanner-container').classList.add('hidden');
+        }
+
+        // 4. النوافذ التفاعلية
         function openActionModal(idx) {
             selectedItemIndex = idx;
             const item = currentItems[idx];
             document.getElementById('modalItemName').innerText = item.name;
             document.getElementById('modalItemBarcode').innerText = item.barcode;
             document.getElementById('modalQtyInput').value = item.recQty || item.reqQty;
+            
+            // تهيئة الصلاحية على القيمة المحفوظة أو الافتراضية
+            if(item.prodDate) document.getElementById('modalProdInput').value = item.prodDate;
+            setShelfLifeYears(item.shelfLifeYears);
+            
             document.getElementById('actionModal').classList.remove('hidden');
         }
 
@@ -294,35 +349,44 @@
         function setShelfLifeYears(years) {
             selectedShelfLifeYears = years;
             document.querySelectorAll('.years-btn').forEach((btn, idx) => {
-                btn.className = (idx + 1 === years) ? "years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs" : "years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs";
+                if (idx + 1 === years) {
+                    btn.className = "years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs shadow-md shadow-orange-500/30";
+                } else {
+                    btn.className = "years-btn bg-slate-700 text-slate-300 py-2 rounded font-bold text-xs";
+                }
             });
         }
 
-        // Expiry Calculation Relative to Document Receiving Date
-        function evaluateExpiryStatus(expiryStr, years) {
-            if(!expiryStr) return { status: 'غير مسجل', badgeClass: 'bg-slate-700 text-slate-300' };
+        // 5. المعادلة الدقيقة للصلاحية بناءً على نسبة 50% و 100%
+        function evaluateExpiryStatus(prodStr, years) {
+            if(!prodStr) return { status: 'غير مسجل', badgeClass: 'bg-slate-700 text-slate-300', expStr: '--' };
 
             const recDateVal = document.getElementById('inputRecDate').value;
             const recDateObj = recDateVal ? new Date(recDateVal) : new Date();
             
-            const [expYear, expMonth] = expiryStr.split('-').map(Number);
-            const expDateObj = new Date(expYear, expMonth - 1, 1);
-            const recCompareDate = new Date(recDateObj.getFullYear(), recDateObj.getMonth(), 1);
+            const [prodYear, prodMonth] = prodStr.split('-').map(Number);
+            
+            // حساب تاريخ الانتهاء تلقائياً
+            const expYear = prodYear + years;
+            const expStr = `${expYear}-${String(prodMonth).padStart(2, '0')}`;
 
-            // 1. Expired Check
-            if (expDateObj <= recCompareDate) {
-                return { status: 'منتهي الصلاحية ❌', badgeClass: 'bg-red-600 text-white font-bold' };
+            const totalShelfMonths = years * 12; // إجمالي عمر المنتج بالشهور
+            
+            // حساب الشهور المنقضية من الإنتاج حتى تاريخ إذن الاستلام
+            const passedMonths = (recDateObj.getFullYear() - prodYear) * 12 + ((recDateObj.getMonth() + 1) - prodMonth);
+
+            // الشرط 1: إذا مر 100% أو أكثر من الصلاحية (منتهي)
+            if (passedMonths >= totalShelfMonths) {
+                return { status: 'منتهي الصلاحية ❌', badgeClass: 'bg-red-600 text-white font-bold', expStr: expStr };
             }
 
-            // 2. Remaining Months vs Total Shelf Months
-            const totalShelfMonths = years * 12;
-            const remainingMonths = (expDateObj.getFullYear() - recDateObj.getFullYear()) * 12 + (expDateObj.getMonth() - recDateObj.getMonth());
-
-            if (remainingMonths <= (totalShelfMonths / 2)) {
-                return { status: 'تخطت نصف المدة ⚠️', badgeClass: 'bg-amber-500 text-white font-bold' };
+            // الشرط 2: إذا مر 50% أو أكثر (ولكن أقل من 100%) (نصف مدة)
+            if (passedMonths >= (totalShelfMonths / 2) && passedMonths < totalShelfMonths) {
+                return { status: 'تخطت نصف المدة ⚠️', badgeClass: 'bg-amber-500 text-white font-bold', expStr: expStr };
             }
 
-            return { status: 'سارية (مقبولة) ✅', badgeClass: 'bg-emerald-600 text-white font-bold' };
+            // الشرط 3: إذا مر أقل من 50% (سارية)
+            return { status: 'سارية (مقبولة) ✅', badgeClass: 'bg-emerald-600 text-white font-bold', expStr: expStr };
         }
 
         function saveItemReceiving(e) {
@@ -330,16 +394,17 @@
             if(selectedItemIndex === null) return;
 
             const qty = Number(document.getElementById('modalQtyInput').value);
-            const expiry = document.getElementById('modalExpiryInput').value;
+            const prod = document.getElementById('modalProdInput').value;
 
             currentItems[selectedItemIndex].recQty = qty;
-            currentItems[selectedItemIndex].expiry = expiry;
+            currentItems[selectedItemIndex].prodDate = prod;
             currentItems[selectedItemIndex].shelfLifeYears = selectedShelfLifeYears;
             currentItems[selectedItemIndex].status = 'Received';
 
-            if(expiry) {
-                const evalRes = evaluateExpiryStatus(expiry, selectedShelfLifeYears);
+            if(prod) {
+                const evalRes = evaluateExpiryStatus(prod, selectedShelfLifeYears);
                 currentItems[selectedItemIndex].expiryEvaluation = evalRes.status;
+                currentItems[selectedItemIndex].expiryDate = evalRes.expStr;
             }
 
             closeActionModal();
@@ -352,18 +417,19 @@
 
             currentItems.forEach((item, idx) => {
                 const isUnreceived = item.status === 'Unreceived';
-                const evalRes = evaluateExpiryStatus(item.expiry, item.shelfLifeYears);
+                const evalRes = evaluateExpiryStatus(item.prodDate, item.shelfLifeYears);
                 
                 tbody1.innerHTML += `
                     <tr>
                         <td class="p-3 font-bold">${idx + 1}</td>
                         <td class="p-3 font-mono font-bold text-orange-400">${item.barcode}</td>
-                        <td class="p-3 font-mono text-slate-400">${item.itemCode}</td>
                         <td class="p-3 font-bold text-slate-200">${item.name}</td>
                         <td class="p-3 font-bold text-slate-300">${item.reqQty}</td>
                         <td class="p-3 font-bold ${isUnreceived ? 'opacity-40' : 'text-emerald-400'}">${item.recQty}</td>
+                        <td class="p-3 font-mono text-slate-400">${item.prodDate || '--'}</td>
+                        <td class="p-3 font-mono text-slate-400">${evalRes.expStr || '--'}</td>
                         <td class="p-3"><span class="px-2 py-1 rounded text-xs ${evalRes.badgeClass}">${evalRes.status}</span></td>
-                        <td class="p-3"><button onclick="openActionModal(${idx})" class="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-3 py-1 rounded text-xs font-bold border border-orange-500/30">استلام / تعديل</button></td>
+                        <td class="p-3"><button onclick="openActionModal(${idx})" class="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-3 py-1 rounded text-xs font-bold border border-orange-500/30">استلام</button></td>
                     </tr>
                 `;
             });
@@ -389,7 +455,7 @@
                         <td class="p-1 border text-center">${item.reqQty}</td>
                         <td class="p-1 border text-center font-bold">${item.recQty}</td>
                         <td class="p-1 border text-center">${diff === 0 ? 'مطابق' : (diff < 0 ? 'عجز ' + diff : 'زيادة +' + diff)}</td>
-                        <td class="p-1 border text-center font-mono">${item.expiry || '--'}</td>
+                        <td class="p-1 border text-center font-mono">${item.prodDate || '--'}</td>
                         <td class="p-1 border text-center">${item.expiryEvaluation || '--'}</td>
                     </tr>
                 `;
