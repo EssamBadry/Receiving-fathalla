@@ -1,24 +1,69 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Receiving System 1.4 - أسواق فتح الله ماركت</title>
+<title>Receiving System</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-body{font-family:'Cairo',sans-serif}
-.inp{width:100%;background:#0f172a;border:1px solid #475569;border-radius:.5rem;padding:.6rem .8rem;color:#f1f5f9}
-.inp:focus{outline:2px solid #f97316;border-color:#f97316}
-.inp:disabled{opacity:.4}
+:root{--bg:#f1f5f9;--panel:#fff;--soft:#f8fafc;--line:#e2e8f0;--txt:#0f172a;--mut:#64748b;--acc:#ea580c;--on:#fff;--shadow:0 1px 3px rgba(15,23,42,.08),0 8px 24px rgba(15,23,42,.06);
+--okb:#d1fae5;--okf:#065f46;--hfb:#fef3c7;--hff:#92400e;--exb:#fee2e2;--exf:#991b1b;--nob:#e2e8f0;--nof:#334155}
+[data-theme=dark]{--bg:#0f172a;--panel:#1e293b;--soft:#162032;--line:#334155;--txt:#f1f5f9;--mut:#94a3b8;--acc:#f97316;--on:#0f172a;--shadow:0 8px 28px rgba(0,0,0,.35);
+--okb:rgba(16,185,129,.18);--okf:#6ee7b7;--hfb:rgba(245,158,11,.2);--hff:#fcd34d;--exb:rgba(239,68,68,.2);--exf:#fca5a5;--nob:rgba(148,163,184,.2);--nof:#cbd5e1}
+*{box-sizing:border-box}
+body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);line-height:1.7;margin:0;transition:background .2s,color .2s}
+.hidden{display:none!important}
+.wrap{max-width:1180px;margin:0 auto;padding:1.25rem 1rem 3rem}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:1rem;background:var(--panel);border:1px solid var(--line);border-bottom:4px solid var(--acc);border-radius:1rem;padding:1rem 1.25rem;margin-bottom:1.5rem;box-shadow:var(--shadow)}
+.logo{width:46px;height:46px;border-radius:.85rem;background:var(--acc);color:var(--on);display:grid;place-items:center;font-weight:800;font-size:1.4rem}
+.topbar h1{font-size:1.35rem;font-weight:800;line-height:1.3;margin:0}
+.topbar p{color:var(--mut);font-size:.85rem;margin:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:1rem;box-shadow:var(--shadow)}
+.pad{padding:1.5rem}
+.lbl{display:block;font-size:.85rem;font-weight:600;color:var(--mut)}
+.lbl .inp{margin-top:.45rem}
+.inp{width:100%;background:var(--soft);border:1px solid var(--line);border-radius:.7rem;padding:.7rem .9rem;color:var(--txt);font:inherit}
+.inp:focus{outline:2px solid var(--acc);outline-offset:1px}
+.inp:disabled{opacity:.45}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;border-radius:.7rem;padding:.65rem 1.1rem;font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--line);background:var(--soft);color:var(--txt);transition:filter .15s}
+.btn:hover{filter:brightness(1.08)}
+.btn-pri{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.btn-sm{padding:.3rem .9rem;font-size:.85rem}
+.drop{display:block;text-align:center;border:2px dashed var(--acc);border-radius:.9rem;padding:1.25rem;font-weight:700;color:var(--acc);cursor:pointer;background:var(--soft)}
+.drop:hover{filter:brightness(1.1)}
+.drop small{display:block;color:var(--mut);font-weight:400}
+.chips{display:flex;flex-wrap:wrap;gap:.6rem;margin-bottom:1rem}
+.chip{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:.25rem .9rem;font-size:.85rem;color:var(--mut)}
+.chip b{color:var(--txt);margin-inline-start:.3rem}
+.bar{height:8px;background:var(--line);border-radius:99px;overflow:hidden;margin:.6rem 0 1.25rem}
+.bar i{display:block;height:100%;width:0;background:var(--acc);transition:width .25s}
+.t{width:100%;border-collapse:collapse;font-size:.9rem;text-align:center;white-space:nowrap}
+.t th{background:var(--soft);color:var(--mut);font-weight:700;padding:.85rem .9rem;border-bottom:1px solid var(--line)}
+.t td{padding:.75rem .9rem;border-bottom:1px solid var(--line)}
+.t tr:hover td{background:var(--soft)}
+.t tr.done td{background:color-mix(in srgb,var(--acc) 7%,transparent)}
+.t .nm{text-align:right;white-space:normal;min-width:220px}
+.badge{display:inline-block;padding:.2rem .7rem;border-radius:.5rem;font-weight:600;font-size:.82rem}
+.b-ok{background:var(--okb);color:var(--okf)}.b-half{background:var(--hfb);color:var(--hff)}.b-exp{background:var(--exb);color:var(--exf)}.b-none{background:var(--nob);color:var(--nof)}
+.modal{position:fixed;inset:0;background:rgba(2,6,23,.6);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:50}
+.sheet{background:var(--panel);border:1px solid var(--line);border-radius:1rem;padding:1.5rem;width:100%;max-width:440px;display:flex;flex-direction:column;gap:1.1rem;box-shadow:var(--shadow);max-height:92vh;overflow:auto}
+.expq{display:flex;justify-content:space-between;align-items:center;background:var(--soft);border:1px solid var(--line);border-radius:.8rem;padding:.7rem 1rem}
+.expq b{font-size:1.6rem;color:var(--acc);font-weight:800}
+.yrs{display:grid;grid-template-columns:repeat(5,1fr);gap:.5rem;margin-top:.45rem}
+.yb{padding:.55rem 0;border-radius:.6rem;border:1px solid var(--line);background:var(--soft);color:var(--txt);font:inherit;font-weight:700;cursor:pointer}
+.yb.on{background:var(--acc);border-color:var(--acc);color:var(--on)}
+.yb:disabled{opacity:.4;cursor:default}
+.sug{position:absolute;z-index:30;inset-inline:0;top:100%;margin-top:.35rem;background:var(--panel);border:1px solid var(--line);border-radius:.8rem;max-height:18rem;overflow:auto;box-shadow:var(--shadow)}
+.sug-item{display:flex;justify-content:space-between;gap:1rem;width:100%;text-align:right;padding:.65rem 1rem;border:0;border-bottom:1px solid var(--line);background:none;color:var(--txt);font:inherit;cursor:pointer}
+.sug-item:hover{background:var(--soft)}.sug-item .qn{color:var(--acc);font-weight:700}
 #printDoc{display:none}
-#reader{width:100%}
 @media print{
  @page{size:A4;margin:12mm}
  html,body{background:#fff!important}
- #app,.modal{display:none!important}
+ .wrap,.modal{display:none!important}
  #printDoc{display:block;color:#000;background:#fff;font-size:12px}
  #printDoc table{width:100%;border-collapse:collapse;margin-top:10px}
  #printDoc th,#printDoc td{border:1px solid #000;padding:4px 5px;text-align:center}
@@ -26,80 +71,70 @@ body{font-family:'Cairo',sans-serif}
 }
 </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen">
-<div id="app" class="max-w-6xl mx-auto p-4">
- <header class="flex items-center justify-between border-b-4 border-orange-500 pb-3 mb-6">
-  <div><h1 class="text-2xl font-extrabold text-orange-500">أسواق فتح الله ماركت</h1><p class="text-slate-400 text-sm">Receiving System 1.4 — استلام التحويلات المخزنية</p></div>
+<body>
+<div class="wrap">
+ <header class="topbar">
+  <div class="flex items-center gap-3"><div class="logo">ف</div><div><h1>Receiving System</h1><p>أسواق فتح الله ماركت — استلام التحويلات المخزنية</p></div></div>
+  <button id="themeBtn" class="btn" onclick="setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark')"></button>
  </header>
 
- <!-- Upload gateway -->
- <section id="gate" class="max-w-xl mx-auto bg-slate-800 rounded-xl p-6 space-y-4">
-  <h2 class="text-lg font-bold">بيانات الإذن</h2>
-  <label class="block text-sm">رقم الإذن<input id="fNo" class="inp mt-1" inputmode="numeric"></label>
-  <label class="block text-sm">تاريخ الاستلام<input id="fDate" type="date" class="inp mt-1"></label>
-  <div class="grid grid-cols-2 gap-3">
-   <label class="block text-sm">فرع الصرف<input id="fFrom" class="inp mt-1"></label>
-   <label class="block text-sm">فرع الاستلام<input id="fTo" class="inp mt-1"></label>
+ <section id="gate" class="card pad" style="max-width:600px;margin:0 auto">
+  <h2 class="text-xl font-extrabold" style="margin:0 0 .25rem">رفع إذن الصرف</h2>
+  <p style="color:var(--mut);font-size:.9rem;margin:0 0 1.5rem">ارفع ملف الإذن وسيتم ملء البيانات تلقائيًا، ويمكنك تعديلها.</p>
+  <div class="grid gap-4 sm:grid-cols-2">
+   <label class="lbl">رقم الإذن<input id="fNo" class="inp" inputmode="numeric"></label>
+   <label class="lbl">تاريخ الاستلام<input id="fDate" type="date" class="inp"></label>
+   <label class="lbl">فرع الصرف<input id="fFrom" class="inp"></label>
+   <label class="lbl">فرع الاستلام<input id="fTo" class="inp"></label>
+   <label class="lbl sm:col-span-2">اسم المسئول<input id="fUser" class="inp"></label>
   </div>
-  <label class="block text-sm">اسم المسئول<input id="fUser" class="inp mt-1"></label>
-  <label class="block bg-orange-500 hover:bg-orange-600 text-slate-900 font-bold text-center rounded-lg py-3 cursor-pointer">رفع ملف الإذن (Excel / CSV / Xls)
-   <input id="file" type="file" accept=".xls,.xlsx,.csv" class="hidden">
-  </label>
-  <p id="gErr" class="text-red-400 text-sm"></p>
+  <label class="drop" style="margin-top:1.5rem">رفع ملف الإذن<small>Excel / CSV / Xls</small><input id="file" type="file" accept=".xls,.xlsx,.csv" class="hidden"></label>
+  <p id="gErr" style="color:#ef4444;font-size:.9rem;margin:.75rem 0 0"></p>
  </section>
 
- <!-- Workspace -->
  <section id="work" class="hidden">
-  <div class="flex flex-wrap gap-2 mb-3">
-   <div class="relative flex-1 min-w-[200px]"><input id="q" class="inp" placeholder="اكتب اسم الصنف أو الباركود (4 أرقام أو أكثر)" autocomplete="off"><div id="sug" class="hidden absolute z-30 inset-x-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg max-h-72 overflow-auto shadow-xl"></div></div>
-   <button onclick="cam()" class="bg-slate-700 hover:bg-slate-600 rounded-lg px-4 font-semibold">فتح الكاميرا</button>
-   <button onclick="finish()" class="bg-orange-500 hover:bg-orange-600 text-slate-900 rounded-lg px-4 py-2 font-bold">إنهاء وطباعة التقرير</button>
+  <div id="infoBar" class="chips"></div>
+  <div class="card pad" style="padding:1rem">
+   <div class="flex flex-wrap gap-3">
+    <div class="relative flex-1" style="min-width:220px"><input id="q" class="inp" placeholder="اكتب اسم الصنف أو الباركود (4 أرقام أو أكثر)" autocomplete="off"><div id="sug" class="sug hidden"></div></div>
+    <button onclick="cam()" class="btn">فتح الكاميرا</button>
+    <button onclick="finish()" class="btn btn-pri">إنهاء وطباعة التقرير</button>
+   </div>
+   <div class="flex justify-between text-sm" style="color:var(--mut);margin-top:.9rem"><span id="prog"></span><span id="msg" style="color:var(--acc)"></span></div>
+   <div class="bar" style="margin-bottom:0"><i id="barI"></i></div>
+   <div id="camBox" class="hidden" style="margin-top:1rem"><div id="reader"></div><button onclick="stopCam()" class="btn" style="margin-top:.6rem">إغلاق الكاميرا</button></div>
   </div>
-  <div class="flex justify-between text-sm text-slate-400 mb-2"><span id="prog"></span><span id="msg" class="text-orange-400"></span></div>
-  <div id="camBox" class="hidden mb-3 bg-slate-800 rounded-lg p-3"><div id="reader"></div><button onclick="stopCam()" class="mt-2 bg-red-600 rounded px-3 py-1">إغلاق الكاميرا</button></div>
-  <div class="overflow-x-auto rounded-lg border border-slate-700">
-   <table class="w-full text-sm text-center whitespace-nowrap">
-    <thead class="bg-slate-800 text-orange-400"><tr>
-     <th class="p-2">م</th><th>الباركود</th><th class="text-right">الاسم</th><th>المصدرة</th><th>المستلمة</th><th>الإنتاج</th><th>الانتهاء</th><th>التقييم</th><th></th>
-    </tr></thead>
-    <tbody id="tb"></tbody>
-   </table>
-  </div>
+  <div class="card" style="margin-top:1.25rem;overflow:hidden"><div style="overflow-x:auto">
+   <table class="t"><thead><tr><th>م</th><th>الباركود</th><th style="text-align:right">الاسم</th><th>المصدرة</th><th>المستلمة</th><th>الإنتاج</th><th>الانتهاء</th><th>التقييم</th><th></th></tr></thead><tbody id="tb"></tbody></table>
+  </div></div>
  </section>
 </div>
 
-<!-- Mode modal -->
-<div id="modeM" class="modal hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
- <div class="bg-slate-800 rounded-xl p-6 w-full max-w-sm text-center">
-  <h3 class="text-lg font-bold mb-1">هل الإذن يتطلب صلاحية؟</h3>
-  <p id="modeInfo" class="text-slate-400 text-sm mb-5"></p>
-  <div class="flex gap-3"><button onclick="setMode(true)" class="flex-1 bg-orange-500 text-slate-900 font-bold rounded-lg py-3">نعم</button><button onclick="setMode(false)" class="flex-1 bg-slate-600 font-bold rounded-lg py-3">لا</button></div>
- </div>
-</div>
+<div id="modeM" class="modal hidden"><div class="sheet" style="text-align:center">
+ <h3 class="text-lg font-extrabold" style="margin:0">هل الإذن يتطلب صلاحية؟</h3>
+ <p id="modeInfo" style="color:var(--mut);font-size:.9rem;margin:0"></p>
+ <div class="flex gap-3"><button onclick="setMode(true)" class="btn btn-pri flex-1" style="padding:.8rem">نعم</button><button onclick="setMode(false)" class="btn flex-1" style="padding:.8rem">لا</button></div>
+</div></div>
 
-<!-- Action modal -->
-<div id="actM" class="modal hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
- <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md space-y-4">
-  <div><h3 id="aName" class="font-bold text-lg"></h3><p id="aSub" class="text-slate-400 text-sm"></p></div>
-  <div class="bg-slate-900 rounded-lg p-3 flex justify-between items-center"><span class="text-sm text-slate-400">الكمية في إذن الصرف</span><span id="aExp" class="text-2xl font-extrabold text-orange-400"></span></div>
-  <label class="block text-sm">الكمية المستلمة (عدّلها لو مختلفة)<input id="aQty" type="number" min="0" step="any" inputmode="decimal" class="inp mt-1"></label>
-  <div id="expBox" class="space-y-3">
-   <label class="block text-sm">تاريخ الإنتاج (شهر/سنة)<input id="aProd" type="month" class="inp mt-1"></label>
-   <div><p class="text-sm mb-1">مدة الصلاحية (سنوات)</p><div id="yrs" class="grid grid-cols-5 gap-2"></div></div>
-   <label class="flex items-center gap-2 text-sm"><input id="aNo" type="checkbox" onchange="togNo()" class="w-4 h-4 accent-orange-500"> بدون صلاحية</label>
-  </div>
-  <div class="flex gap-3"><button onclick="saveAct()" class="flex-1 bg-orange-500 text-slate-900 font-bold rounded-lg py-3">حفظ</button><button onclick="show('actM',false)" class="flex-1 bg-slate-600 rounded-lg py-3">إلغاء</button></div>
+<div id="actM" class="modal hidden"><div class="sheet">
+ <div><h3 id="aName" class="text-lg font-extrabold" style="margin:0"></h3><p id="aSub" style="color:var(--mut);font-size:.85rem;margin:.2rem 0 0"></p></div>
+ <div class="expq"><span style="color:var(--mut);font-size:.9rem">الكمية في إذن الصرف</span><b id="aExp"></b></div>
+ <label class="lbl">الكمية المستلمة (عدّلها لو مختلفة)<input id="aQty" type="number" min="0" step="any" inputmode="decimal" class="inp"></label>
+ <div id="expBox" class="flex flex-col gap-4">
+  <label class="lbl">تاريخ الإنتاج (شهر/سنة)<input id="aProd" type="month" class="inp"></label>
+  <div><span class="lbl">مدة الصلاحية (سنوات)</span><div id="yrs" class="yrs"></div></div>
+  <label class="flex items-center gap-2 text-sm"><input id="aNo" type="checkbox" onchange="togNo()" style="width:1.05rem;height:1.05rem;accent-color:var(--acc)"> بدون صلاحية</label>
  </div>
-</div>
+ <div class="flex gap-3"><button onclick="saveAct()" class="btn btn-pri flex-1" style="padding:.8rem">حفظ</button><button onclick="show('actM',false)" class="btn flex-1" style="padding:.8rem">إلغاء</button></div>
+</div></div>
 
-<!-- Print document -->
 <div id="printDoc"></div>
 
 <script>
 const $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const show=(id,v=true)=>$(id).classList.toggle('hidden',!v);
-const ST={ok:['سارية (مقبولة) ✅','bg-emerald-600/30 text-emerald-300'],half:['تخطت نصف المدة ⚠️','bg-amber-500/30 text-amber-300'],exp:['منتهي الصلاحية ❌','bg-red-600/30 text-red-300'],none:['بدون صلاحية','bg-slate-600/40 text-slate-300']};
+const ST={ok:['سارية (مقبولة) ✅','b-ok'],half:['تخطت نصف المدة ⚠️','b-half'],exp:['منتهي الصلاحية ❌','b-exp'],none:['بدون صلاحية','b-none']};
 let items=[],needExp=false,cur=-1,years=0,info={},sc=null;
 $('fDate').value=new Date().toISOString().slice(0,10);
 
@@ -170,6 +205,7 @@ $('file').addEventListener('change',e=>{
 function setMode(v){
   needExp=v;show('modeM',false);
   info={no:$('fNo').value,date:$('fDate').value,from:$('fFrom').value,to:$('fTo').value,user:$('fUser').value};
+  $('infoBar').innerHTML=[['رقم الإذن',info.no],['من',info.from],['إلى',info.to],['التاريخ',info.date],['المسئول',info.user],['الأصناف',items.length]].filter(c=>c[1]!=='').map(c=>`<span class="chip">${c[0]}<b>${esc(c[1])}</b></span>`).join('');
   show('gate',false);show('work');render();$('q').focus();
 }
 
@@ -178,10 +214,10 @@ function render(){
   const v=$('q').value.trim();
   $('tb').innerHTML=items.map((it,i)=>{
     if(v&&!mt(it,v))return'';
-    const s=it.st?`<span class="px-2 py-1 rounded ${ST[it.st][1]}">${ST[it.st][0]}</span>`:'—';
-    return`<tr class="border-t border-slate-700 ${it.recv!=null?'bg-slate-800/60':''}"><td class="p-2">${i+1}</td><td>${esc(it.bc||it.code)}</td><td class="text-right whitespace-normal min-w-[200px]">${esc(it.name)}</td><td>${it.qty}</td><td class="font-bold">${it.recv??'—'}</td><td>${it.prod?fm(it.prod):'—'}</td><td>${it.exp?fm(it.exp):'—'}</td><td class="p-1">${s}</td><td class="p-1"><button onclick="openAct(${i})" class="bg-orange-500 text-slate-900 font-bold rounded px-3 py-1">استلام</button></td></tr>`;
+    const s=it.st?`<span class="badge ${ST[it.st][1]}">${ST[it.st][0]}</span>`:'—';
+    return`<tr class="${it.recv!=null?'done':''}"><td>${i+1}</td><td>${esc(it.bc||it.code)}</td><td class="nm">${esc(it.name)}</td><td>${it.qty}</td><td><b>${it.recv??'—'}</b></td><td>${it.prod?fm(it.prod):'—'}</td><td>${it.exp?fm(it.exp):'—'}</td><td>${s}</td><td><button onclick="openAct(${i})" class="btn btn-pri btn-sm">استلام</button></td></tr>`;
   }).join('');
-  $('prog').textContent='تم استلام '+items.filter(i=>i.recv!=null).length+' من '+items.length;
+  const dn=items.filter(i=>i.recv!=null).length;$('prog').textContent='تم استلام '+dn+' من '+items.length;$('barI').style.width=(items.length?dn/items.length*100:0)+'%';
 }
 function fm(d){
   if(typeof d==='string'){const[y,m]=d.split('-');return m+'/'+y}
@@ -193,7 +229,7 @@ function sugg(v){
   const m=[];
   if(v.length>=2&&!/^\d+$/.test(v))items.forEach((it,i)=>{if(m.length<8&&mt(it,v))m.push(i)});
   firstSug=m.length?m[0]:-1;
-  $('sug').innerHTML=m.map(i=>`<button type="button" onclick="pick(${i})" class="w-full text-right px-3 py-2 hover:bg-slate-700 border-b border-slate-700 flex justify-between gap-3"><span>${esc(items[i].name)}</span><span class="text-orange-400 whitespace-nowrap">${items[i].qty}</span></button>`).join('');
+  $('sug').innerHTML=m.map(i=>`<button type="button" onclick="pick(${i})" class="sug-item"><span>${esc(items[i].name)}</span><span class="qn">${items[i].qty}</span></button>`).join('');
   show('sug',m.length>0);
 }
 function pick(i){$('q').value='';show('sug',false);render();openAct(i)}
@@ -223,11 +259,11 @@ function stopCam(){
 }
 
 /* ---------- Action modal ---------- */
-$('yrs').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" data-y="${n}" onclick="setY(${n})" class="yb rounded-lg py-2 font-bold bg-slate-700">${n}</button>`).join('');
+$('yrs').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" data-y="${n}" onclick="setY(${n})" class="yb">${n}</button>`).join('');
 function setY(n){
   if($('aNo').checked)return;
   years=n;
-  document.querySelectorAll('.yb').forEach(b=>{const on=+b.dataset.y===n;b.classList.toggle('bg-orange-500',on);b.classList.toggle('text-slate-900',on);b.classList.toggle('bg-slate-700',!on)});
+  document.querySelectorAll('.yb').forEach(b=>{const on=+b.dataset.y===n;b.classList.toggle('on',on)});
 }
 function togNo(){
   const n=$('aNo').checked;
@@ -235,7 +271,7 @@ function togNo(){
   document.querySelectorAll('.yb').forEach(b=>b.disabled=n);
   if(n){years=0;setYUI()}
 }
-function setYUI(){document.querySelectorAll('.yb').forEach(b=>{const on=+b.dataset.y===years;b.classList.toggle('bg-orange-500',on);b.classList.toggle('text-slate-900',on);b.classList.toggle('bg-slate-700',!on)})}
+function setYUI(){document.querySelectorAll('.yb').forEach(b=>{const on=+b.dataset.y===years;b.classList.toggle('on',on)})}
 function openAct(i){
   cur=i;const it=items[i];
   $('aName').textContent=it.name;
@@ -280,9 +316,15 @@ function finish(){
   <table style="margin-top:8px"><tr><th>رقم الإذن</th><td>${esc(info.no)}</td><th>تاريخ الاستلام</th><td>${esc(info.date)}</td></tr>
   <tr><th>فرع الصرف</th><td>${esc(info.from)}</td><th>فرع الاستلام</th><td>${esc(info.to)}</td></tr></table>
   <table><thead><tr><th>م</th><th>الباركود</th><th>الصنف</th><th>المصدرة</th><th>المستلمة</th><th>الفارق</th><th>الإنتاج</th><th>الانتهاء</th><th>التقييم</th></tr></thead><tbody>${rows}</tbody></table>
-  <div style="display:flex;justify-content:space-between;margin-top:50px"><div>مسئول الاستلام: ${esc(info.user)}<br><br>التوقيع: ..............................</div><div>اعتماد المدير: ..............................</div></div>`;
+  <div style="display:flex;justify-content:space-between;margin-top:50px"><div>مسئول الاستلام: ${esc(info.user)}<br><br>التوقيع: ..............................</div></div>`;
   window.print();
 }
+function setTheme(t){
+  document.documentElement.dataset.theme=t;
+  try{localStorage.setItem('rs-theme',t)}catch(e){}
+  $('themeBtn').textContent=t==='dark'?'☀️ الوضع الفاتح':'🌙 الوضع الداكن';
+}
+setTheme((()=>{try{return localStorage.getItem('rs-theme')}catch(e){return null}})()||'dark');
 </script>
 </body>
 </html>
