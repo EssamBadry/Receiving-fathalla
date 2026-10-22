@@ -1,468 +1,269 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>أسواق فتح الله ماركت - نظام استلام التحويلات</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS (XLSX) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- HTML5 QRCode Scanner -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
-    <!-- Google Fonts: Cairo -->
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
-
-    <style>
-        body { font-family: 'Cairo', sans-serif; }
-        .bg-primary { background-color: #ea580c; }
-        .text-primary { color: #ea580c; }
-        #reader video { border-radius: 0.75rem; object-fit: cover; }
-        @media print {
-            .no-print { display: none !important; }
-            .print-only { display: block !important; }
-            table { width: 100% !important; border-collapse: collapse !important; }
-            th, td { border: 1px solid #000 !important; padding: 6px !important; text-align: right; }
-        }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Receiving System 1.4 - أسواق فتح الله ماركت</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+body{font-family:'Cairo',sans-serif}
+.inp{width:100%;background:#0f172a;border:1px solid #475569;border-radius:.5rem;padding:.6rem .8rem;color:#f1f5f9}
+.inp:focus{outline:2px solid #f97316;border-color:#f97316}
+.inp:disabled{opacity:.4}
+#printDoc{display:none}
+#reader{width:100%}
+@media print{
+ @page{size:A4;margin:12mm}
+ html,body{background:#fff!important}
+ #app,.modal{display:none!important}
+ #printDoc{display:block;color:#000;background:#fff;font-size:12px}
+ #printDoc table{width:100%;border-collapse:collapse;margin-top:10px}
+ #printDoc th,#printDoc td{border:1px solid #000;padding:4px 5px;text-align:center}
+ #printDoc th{background:#e5e5e5}
+}
+</style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col p-4">
+<body class="bg-slate-900 text-slate-100 min-h-screen">
+<div id="app" class="max-w-6xl mx-auto p-4">
+ <header class="flex items-center justify-between border-b-4 border-orange-500 pb-3 mb-6">
+  <div><h1 class="text-2xl font-extrabold text-orange-500">أسواق فتح الله ماركت</h1><p class="text-slate-400 text-sm">Receiving System 1.4 — استلام التحويلات المخزنية</p></div>
+ </header>
 
-    <!-- Header -->
-    <header class="bg-slate-800 text-white p-4 rounded-2xl shadow-xl flex justify-between items-center mb-6 max-w-6xl mx-auto w-full border border-slate-700 no-print">
-        <div class="flex items-center space-x-3 space-x-reverse">
-            <!-- اللوجو المستدعى من الصورة المرفقة -->
-            <img src="63703.png" alt="Fathalla Logo" class="w-16 h-16 object-contain bg-slate-900 rounded-xl shadow-lg border border-orange-500/30 p-1">
-            <div>
-                <h1 class="font-extrabold text-xl text-orange-500 tracking-wide">أسواق فتح الله ماركت</h1>
-                <p class="text-xs text-slate-400 font-semibold mt-1">نظام استلام وتفريغ التحويلات (نسخة الجرد والصلاحيات)</p>
-            </div>
-        </div>
-    </header>
+ <!-- Upload gateway -->
+ <section id="gate" class="max-w-xl mx-auto bg-slate-800 rounded-xl p-6 space-y-4">
+  <h2 class="text-lg font-bold">بيانات الإذن</h2>
+  <label class="block text-sm">رقم الإذن<input id="fNo" class="inp mt-1" inputmode="numeric"></label>
+  <label class="block text-sm">تاريخ الاستلام<input id="fDate" type="date" class="inp mt-1"></label>
+  <div class="grid grid-cols-2 gap-3">
+   <label class="block text-sm">فرع الصرف<input id="fFrom" class="inp mt-1"></label>
+   <label class="block text-sm">فرع الاستلام<input id="fTo" class="inp mt-1"></label>
+  </div>
+  <label class="block text-sm">اسم المسئول<input id="fUser" class="inp mt-1"></label>
+  <label class="block bg-orange-500 hover:bg-orange-600 text-slate-900 font-bold text-center rounded-lg py-3 cursor-pointer">رفع ملف الإذن (Excel / CSV / Xls)
+   <input id="file" type="file" accept=".xls,.xlsx,.csv" class="hidden">
+  </label>
+  <p id="gErr" class="text-red-400 text-sm"></p>
+ </section>
 
-    <!-- Main Container -->
-    <main class="max-w-6xl w-full mx-auto flex-1 flex flex-col gap-6">
+ <!-- Workspace -->
+ <section id="work" class="hidden">
+  <div class="flex flex-wrap gap-2 mb-3">
+   <input id="q" class="inp flex-1 min-w-[200px]" placeholder="ابحث بالباركود (4 أرقام أو أكثر) أو اسم الصنف" autocomplete="off">
+   <button onclick="cam()" class="bg-slate-700 hover:bg-slate-600 rounded-lg px-4 font-semibold">فتح الكاميرا</button>
+   <button onclick="finish()" class="bg-orange-500 hover:bg-orange-600 text-slate-900 rounded-lg px-4 py-2 font-bold">إنهاء وطباعة التقرير</button>
+  </div>
+  <div class="flex justify-between text-sm text-slate-400 mb-2"><span id="prog"></span><span id="msg" class="text-orange-400"></span></div>
+  <div id="camBox" class="hidden mb-3 bg-slate-800 rounded-lg p-3"><div id="reader"></div><button onclick="stopCam()" class="mt-2 bg-red-600 rounded px-3 py-1">إغلاق الكاميرا</button></div>
+  <div class="overflow-x-auto rounded-lg border border-slate-700">
+   <table class="w-full text-sm text-center whitespace-nowrap">
+    <thead class="bg-slate-800 text-orange-400"><tr>
+     <th class="p-2">م</th><th>الباركود</th><th class="text-right">الاسم</th><th>المصدرة</th><th>المستلمة</th><th>الإنتاج</th><th>الانتهاء</th><th>التقييم</th><th></th>
+    </tr></thead>
+    <tbody id="tb"></tbody>
+   </table>
+  </div>
+ </section>
+</div>
 
-        <!-- Gateway / Setup -->
-        <section id="uploadGateway" class="bg-slate-800 rounded-2xl p-6 md:p-8 text-center max-w-2xl mx-auto w-full border border-slate-700 shadow-2xl no-print">
-            <h2 class="text-2xl font-extrabold mb-1 text-orange-400">بيانات إذن التحويل والتفريغ</h2>
-            <p class="text-slate-400 text-xs mb-6">يتم قراءة الكمية الفعلية والباركود مباشرة من شيت إذن الصرف</p>
-            
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-right mb-6 bg-slate-900/60 p-4 rounded-xl border border-slate-700 text-xs">
-                <div>
-                    <label class="block font-bold mb-1">رقم إذن التحويل *</label>
-                    <input type="text" id="inputDocNo" value="3285" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white font-bold focus:outline-none focus:border-orange-500">
-                </div>
-                <div>
-                    <label class="block font-bold mb-1">تاريخ إذن الاستلام المرجعي *</label>
-                    <input type="date" id="inputRecDate" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-orange-400 font-bold focus:outline-none focus:border-orange-500">
-                </div>
-                <div>
-                    <label class="block font-bold mb-1">فرع الصرف *</label>
-                    <input type="text" id="inputSenderBranch" value="فرع سموحة" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none">
-                </div>
-                <div>
-                    <label class="block font-bold mb-1">فرع الاستلام *</label>
-                    <input type="text" id="inputReceiverBranch" value="عجمى ستار مخزن نيو لوجيستيك 21" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block font-bold mb-1">اسم مسئول الاستلام *</label>
-                    <input type="text" id="inputReceiverName" value="عصام بدري" class="w-full bg-slate-800 border border-slate-600 rounded p-2 text-white focus:outline-none">
-                </div>
-            </div>
+<!-- Mode modal -->
+<div id="modeM" class="modal hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+ <div class="bg-slate-800 rounded-xl p-6 w-full max-w-sm text-center">
+  <h3 class="text-lg font-bold mb-1">هل الإذن يتطلب صلاحية؟</h3>
+  <p id="modeInfo" class="text-slate-400 text-sm mb-5"></p>
+  <div class="flex gap-3"><button onclick="setMode(true)" class="flex-1 bg-orange-500 text-slate-900 font-bold rounded-lg py-3">نعم</button><button onclick="setMode(false)" class="flex-1 bg-slate-600 font-bold rounded-lg py-3">لا</button></div>
+ </div>
+</div>
 
-            <input type="file" id="excelFileInput" accept=".xlsx, .xls, .csv" class="hidden">
-            
-            <div class="flex flex-col sm:flex-row gap-3 justify-center">
-                <button onclick="document.getElementById('excelFileInput').click()" class="bg-primary text-white px-8 py-3.5 rounded-xl font-bold shadow-lg text-base hover:bg-orange-600 transition">
-                    تحميل شيت إذن الصرف (Excel)
-                </button>
-            </div>
-        </section>
+<!-- Action modal -->
+<div id="actM" class="modal hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
+ <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md space-y-4">
+  <div><h3 id="aName" class="font-bold text-lg"></h3><p id="aSub" class="text-slate-400 text-sm"></p></div>
+  <label class="block text-sm">الكمية الفعلية المستلمة<input id="aQty" type="number" min="0" step="any" inputmode="decimal" class="inp mt-1"></label>
+  <div id="expBox" class="space-y-3">
+   <label class="block text-sm">تاريخ الإنتاج (شهر/سنة)<input id="aProd" type="month" class="inp mt-1"></label>
+   <div><p class="text-sm mb-1">مدة الصلاحية (سنوات)</p><div id="yrs" class="grid grid-cols-5 gap-2"></div></div>
+   <label class="flex items-center gap-2 text-sm"><input id="aNo" type="checkbox" onchange="togNo()" class="w-4 h-4 accent-orange-500"> بدون صلاحية</label>
+  </div>
+  <div class="flex gap-3"><button onclick="saveAct()" class="flex-1 bg-orange-500 text-slate-900 font-bold rounded-lg py-3">حفظ</button><button onclick="show('actM',false)" class="flex-1 bg-slate-600 rounded-lg py-3">إلغاء</button></div>
+ </div>
+</div>
 
-        <!-- Workspace -->
-        <div id="workspace" class="hidden flex-col gap-6 no-print">
+<!-- Print document -->
+<div id="printDoc"></div>
 
-            <!-- Controls Panel -->
-            <div class="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col md:flex-row gap-4 justify-between items-center shadow-lg">
-                <div class="relative w-full md:w-2/3 flex gap-2">
-                    <input type="text" id="barcodeSearchInput" placeholder="ادخل آخر 4 أرقام للتمرير التلقائي..." 
-                           class="w-full bg-slate-900 text-white border-2 border-orange-500 rounded-xl px-4 py-3 text-lg font-bold focus:outline-none placeholder:text-sm">
-                    <button onclick="startScanner()" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-3 rounded-xl font-bold flex items-center gap-2 border border-slate-500 transition whitespace-nowrap">
-                        📷 كاميرا
-                    </button>
-                </div>
-                
-                <button onclick="triggerOfficialPrint()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-extrabold shadow-lg w-full md:w-auto transition">
-                    إنهاء وطباعة التقرير 🖨️
-                </button>
-            </div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const show=(id,v=true)=>$(id).classList.toggle('hidden',!v);
+const ST={ok:['سارية (مقبولة) ✅','bg-emerald-600/30 text-emerald-300'],half:['تخطت نصف المدة ⚠️','bg-amber-500/30 text-amber-300'],exp:['منتهي الصلاحية ❌','bg-red-600/30 text-red-300'],none:['بدون صلاحية','bg-slate-600/40 text-slate-300']};
+let items=[],needExp=false,cur=-1,years=0,info={},sc=null;
+$('fDate').value=new Date().toISOString().slice(0,10);
 
-            <!-- Scanner Container -->
-            <div id="scanner-container" class="hidden bg-slate-800 rounded-2xl p-4 border border-slate-700 shadow-xl relative max-w-lg mx-auto w-full">
-                <button onclick="closeScanner()" class="absolute top-2 left-2 bg-red-600 text-white w-8 h-8 rounded-full font-bold z-10">✕</button>
-                <div id="reader" class="w-full h-auto"></div>
-            </div>
+/* ---------- Parsing ---------- */
+const clean=v=>v==null?'':String(v).trim().replace(/\.0+$/,'');
+const bad=s=>/اسم\s*الصنف|الكمية|الباركود/.test(s);
+function parse(rows){
+  const head=rows.slice(0,10).map(r=>(r||[]).join(' ')).join(' ');
+  const m=head.match(/(?:رقم المستند|رقم التحويل|رقم الطلب)\s*[:\-]?\s*(\d+)/);
+  const out=[];
+  rows.forEach(r=>{
+    if(!r)return;
+    const q=parseFloat(clean(r[0]).replace(/,/g,'')),nm=clean(r[11]);
+    if(q>0&&nm.length>1&&!bad(nm))out.push({qty:q,name:nm,bc:clean(r[30]),code:clean(r[33])});
+  });
+  if(!out.length)rows.forEach(r=>{
+    if(!r)return;
+    let bc='',nm='',q=null;
+    r.forEach(c=>{
+      const s=clean(c);if(!s)return;
+      if(/^\d{12,13}$/.test(s)){if(!bc)bc=s}
+      else if(/[\u0600-\u06FF]/.test(s)&&s.length>3&&!bad(s)){if(!nm)nm=s}
+      else if(q==null&&/^\d+(\.\d+)?$/.test(s)&&+s>0)q=+s;
+    });
+    if(nm&&q)out.push({qty:q,name:nm,bc,code:''});
+  });
+  let from='',to='';
+  rows.slice(0,10).forEach((r,i)=>{
+    if(!r||from)return;
+    const lab=r.findIndex(c=>clean(c)==='فرع الصرف');
+    if(lab<0)return;
+    const col=r.findIndex((x,j)=>j!==lab&&clean(x));
+    if(col<0)return;
+    from=clean(r[col]);
+    for(let k=1;k<=3;k++){
+      const v=clean((rows[i+k]||[])[col]);
+      if(v&&/[\u0600-\u06FF]/.test(v)&&!v.includes(':')){to=v;break}
+    }
+  });
+  return{no:m?m[1]:'',from,to,items:out};
+}
+$('file').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  $('gErr').textContent='';
+  const fr=new FileReader();
+  fr.onload=ev=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(ev.target.result),{type:'array'});
+      const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:null});
+      const p=parse(rows);
+      if(!p.items.length){$('gErr').textContent='لم يتم العثور على أصناف في الملف. تأكد من صيغة الملف.';return}
+      if(p.no)$('fNo').value=p.no;
+      if(p.from)$('fFrom').value=p.from;
+      if(p.to)$('fTo').value=p.to;
+      items=p.items.map(x=>({...x,recv:null,prod:'',years:0,noExp:false,st:null,exp:null}));
+      $('modeInfo').textContent='تم تحميل '+items.length+' صنف';
+      show('modeM');
+    }catch(err){$('gErr').textContent='تعذر قراءة الملف: '+err.message}
+  };
+  fr.readAsArrayBuffer(f);e.target.value='';
+});
+function setMode(v){
+  needExp=v;show('modeM',false);
+  info={no:$('fNo').value,date:$('fDate').value,from:$('fFrom').value,to:$('fTo').value,user:$('fUser').value};
+  show('gate',false);show('work');render();$('q').focus();
+}
 
-            <!-- Items Table -->
-            <div class="bg-slate-800 rounded-2xl shadow-xl border border-slate-700 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-right text-xs">
-                        <thead class="bg-slate-900 text-orange-400 font-bold border-b border-slate-700">
-                            <tr>
-                                <th class="p-3">م</th>
-                                <th class="p-3">الباركود الدولي</th>
-                                <th class="p-3">اسم الصنف</th>
-                                <th class="p-3">الكمية المصدرة</th>
-                                <th class="p-3">المستلمة</th>
-                                <th class="p-3">الإنتاج</th>
-                                <th class="p-3">الانتهاء</th>
-                                <th class="p-3">تقييم الصلاحية</th>
-                                <th class="p-3">إجراء</th>
-                            </tr>
-                        </thead>
-                        <tbody id="itemsTableBody" class="divide-y divide-slate-700"></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+/* ---------- Table / search ---------- */
+function render(){
+  const v=$('q').value.trim();
+  $('tb').innerHTML=items.map((it,i)=>{
+    if(v&&!(it.name.includes(v)||it.bc.includes(v)||it.code.includes(v)))return'';
+    const s=it.st?`<span class="px-2 py-1 rounded ${ST[it.st][1]}">${ST[it.st][0]}</span>`:'—';
+    return`<tr class="border-t border-slate-700 ${it.recv!=null?'bg-slate-800/60':''}"><td class="p-2">${i+1}</td><td>${esc(it.bc||it.code)}</td><td class="text-right whitespace-normal min-w-[200px]">${esc(it.name)}</td><td>${it.qty}</td><td class="font-bold">${it.recv??'—'}</td><td>${it.prod?fm(it.prod):'—'}</td><td>${it.exp?fm(it.exp):'—'}</td><td class="p-1">${s}</td><td class="p-1"><button onclick="openAct(${i})" class="bg-orange-500 text-slate-900 font-bold rounded px-3 py-1">استلام</button></td></tr>`;
+  }).join('');
+  $('prog').textContent='تم استلام '+items.filter(i=>i.recv!=null).length+' من '+items.length;
+}
+function fm(d){
+  if(typeof d==='string'){const[y,m]=d.split('-');return m+'/'+y}
+  return String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
+}
+$('q').addEventListener('input',search);
+function search(){
+  const v=$('q').value.trim();$('msg').textContent='';
+  if(v.length>=4){
+    const hit=[];
+    items.forEach((it,i)=>{if([it.bc,it.code].some(c=>c&&(c===v||c.endsWith(v))))hit.push(i)});
+    if(hit.length===1){$('q').value='';render();openAct(hit[0]);return}
+    if(!hit.length)$('msg').textContent='لا يوجد صنف مطابق';
+  }
+  render();
+}
 
-        <!-- Printable Report (A4) -->
-        <div id="printableDocument" class="hidden print-only bg-white text-black p-4">
-            <div class="flex justify-between items-center border-b-2 border-black pb-4 mb-4">
-                <div class="text-right flex items-center gap-3">
-                    <img src="63703.png" alt="Logo" class="w-12 h-12 object-contain grayscale">
-                    <div>
-                        <h1 class="text-xl font-bold">أسواق فتح الله ماركت</h1>
-                        <h2 class="text-sm font-semibold">تقرير استلام تحويل مخزني</h2>
-                    </div>
-                </div>
-                <div class="text-left font-mono text-xs">
-                    <p>رقم المستند: <span id="printDocNo" class="font-bold">--</span></p>
-                    <p>تاريخ الاستلام: <span id="printRecDate">--</span></p>
-                </div>
-            </div>
+/* ---------- Camera ---------- */
+function cam(){
+  if(sc)return;
+  show('camBox');
+  sc=new Html5QrcodeScanner('reader',{fps:10,qrbox:{width:250,height:150}},false);
+  sc.render(txt=>{stopCam();$('q').value=txt;search()},()=>{});
+}
+function stopCam(){
+  if(sc){sc.clear().catch(()=>{});sc=null}
+  show('camBox',false);
+}
 
-            <div class="grid grid-cols-2 gap-2 text-xs border p-3 mb-4 bg-slate-50">
-                <p><strong>فرع الصرف:</strong> <span id="printSenderBranch">--</span></p>
-                <p><strong>فرع الاستلام:</strong> <span id="printReceiverBranch">--</span></p>
-                <p><strong>مسئول الاستلام:</strong> <span id="printReceiverName">--</span></p>
-            </div>
+/* ---------- Action modal ---------- */
+$('yrs').innerHTML=[1,2,3,4,5].map(n=>`<button type="button" data-y="${n}" onclick="setY(${n})" class="yb rounded-lg py-2 font-bold bg-slate-700">${n}</button>`).join('');
+function setY(n){
+  if($('aNo').checked)return;
+  years=n;
+  document.querySelectorAll('.yb').forEach(b=>{const on=+b.dataset.y===n;b.classList.toggle('bg-orange-500',on);b.classList.toggle('text-slate-900',on);b.classList.toggle('bg-slate-700',!on)});
+}
+function togNo(){
+  const n=$('aNo').checked;
+  $('aProd').disabled=n;
+  document.querySelectorAll('.yb').forEach(b=>b.disabled=n);
+  if(n){years=0;setYUI()}
+}
+function setYUI(){document.querySelectorAll('.yb').forEach(b=>{const on=+b.dataset.y===years;b.classList.toggle('bg-orange-500',on);b.classList.toggle('text-slate-900',on);b.classList.toggle('bg-slate-700',!on)})}
+function openAct(i){
+  cur=i;const it=items[i];
+  $('aName').textContent=it.name;
+  $('aSub').textContent='الباركود: '+(it.bc||it.code||'—')+' — الكمية المصدرة: '+it.qty;
+  $('aQty').value=it.recv??'';
+  $('aProd').value=it.prod;$('aNo').checked=it.noExp;
+  years=it.years;togNo();if(!it.noExp)setYUI();
+  show('expBox',needExp);show('actM');
+  setTimeout(()=>$('aQty').focus(),50);
+}
+function evalItem(it){
+  if(it.noExp){it.st='none';it.exp=null;return}
+  if(!needExp||!it.prod||!it.years){it.st=null;it.exp=null;return}
+  const[y,m]=it.prod.split('-').map(Number);
+  const p=new Date(y,m-1,1),e=new Date(y+it.years,m-1,1),r=new Date(info.date);
+  it.exp=e;
+  it.st=r>=e?'exp':(r-p>(e-p)/2?'half':'ok');
+}
+function saveAct(){
+  const q=parseFloat($('aQty').value);
+  if(isNaN(q)||q<0){alert('أدخل الكمية الفعلية');return}
+  const no=$('aNo').checked,pr=$('aProd').value;
+  if(needExp&&!no&&(!pr||!years)){alert('أدخل تاريخ الإنتاج واختر مدة الصلاحية أو علّم "بدون صلاحية"');return}
+  const it=items[cur];
+  it.recv=q;it.noExp=needExp&&no;it.prod=it.noExp?'':(needExp?pr:'');it.years=it.noExp?0:(needExp?years:0);
+  evalItem(it);
+  show('actM',false);render();$('q').focus();
+}
 
-            <table class="w-full text-xs text-right border-collapse mb-6">
-                <thead>
-                    <tr class="bg-slate-200">
-                        <th class="p-1 border">م</th>
-                        <th class="p-1 border">الباركود</th>
-                        <th class="p-1 border">اسم الصنف</th>
-                        <th class="p-1 border">الكمية الصادرة</th>
-                        <th class="p-1 border">المستلمة</th>
-                        <th class="p-1 border">الفارق</th>
-                        <th class="p-1 border">الإنتاج</th>
-                        <th class="p-1 border">حالة الصلاحية</th>
-                    </tr>
-                </thead>
-                <tbody id="printTableBody"></tbody>
-            </table>
-
-            <div class="mt-8 pt-4 border-t border-black text-sm font-bold text-left">
-                <p>توقيع مسئول الاستلام: ........................................</p>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Modal Form for Item Entry -->
-    <div id="actionModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4 no-print">
-        <div class="bg-slate-800 text-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-right border border-orange-500/50 relative">
-            <button onclick="closeActionModal()" class="absolute left-4 top-4 text-slate-400 text-lg font-bold hover:text-white">✕</button>
-            
-            <h3 id="modalItemName" class="text-lg font-extrabold text-orange-400 my-1">--</h3>
-            <p class="text-xs text-slate-400 mb-4">الباركود: <span id="modalItemBarcode" class="font-mono">--</span></p>
-
-            <form id="actionForm" onsubmit="saveItemReceiving(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-bold mb-1">الكمية المستلمة فعلياً</label>
-                    <input type="number" id="modalQtyInput" min="0" required class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-xl font-bold text-center text-white focus:outline-none focus:border-orange-500">
-                </div>
-
-                <div class="space-y-3">
-                    <div>
-                        <label class="block text-xs font-bold mb-1">تاريخ الإنتاج المطبوع (شهر / سنة)</label>
-                        <input type="month" id="modalProdInput" class="w-full bg-slate-900 border border-slate-600 rounded-xl p-3 text-lg font-bold text-center text-orange-400 focus:outline-none">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-xs font-bold mb-1">مدة الصلاحية الكلية للمنتج</label>
-                        <div class="grid grid-cols-5 gap-1" id="shelfLifeSelector">
-                            <button type="button" onclick="setShelfLifeYears(1)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">1 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(2)" class="years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs shadow-md shadow-orange-500/30">2 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(3)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">3 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(4)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">4 سنة</button>
-                            <button type="button" onclick="setShelfLifeYears(5)" class="years-btn bg-slate-700 text-white py-2 rounded font-bold text-xs">5 سنة</button>
-                        </div>
-                    </div>
-                </div>
-
-                <button type="submit" class="w-full bg-primary hover:bg-orange-600 text-white py-3 rounded-xl font-bold shadow-lg mt-2 transition">
-                    حفظ وتأكيد الاستلام
-                </button>
-            </form>
-        </div>
-    </div>
-
-    <script>
-        let currentItems = [];
-        let selectedItemIndex = null;
-        let selectedShelfLifeYears = 2; // الافتراضي سنتين
-        let html5QrcodeScanner = null;
-
-        document.getElementById('inputRecDate').valueAsDate = new Date();
-
-        // 1. قراءة شيت الإكسيل (اعتماداً على الكمية الفعلية للصرف)
-        document.getElementById('excelFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, {type: 'array'});
-                    const rawRows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], {header: 1, defval: ""});
-
-                    currentItems = [];
-                    
-                    // قراءة بيانات الترويسة من أعلى الشيت
-                    for(let r = 0; r < 8; r++) {
-                        const rowStr = rawRows[r] ? rawRows[r].join(" ") : "";
-                        if(rowStr.includes("رقم المستند")) {
-                            const match = rowStr.match(/رقم المستند\s*:\s*(\d+)/);
-                            if(match) document.getElementById('inputDocNo').value = match[1];
-                        }
-                    }
-
-                    // قراءة الأصناف بداية من الصف 9
-                    for (let r = 9; r < rawRows.length; r++) {
-                        const row = rawRows[r];
-                        if (!row || row.length < 25) continue;
-
-                        const actualQty = parseFloat(row[0]); // الكمية الفعلية الصادرة من المخزن الرئيسي
-                        const name = String(row[10]).trim();  
-                        const barcode = String(row[23]).trim(); 
-                        const itemCode = String(row[26]).trim(); 
-
-                        if (barcode && barcode !== "" && !isNaN(actualQty)) {
-                            currentItems.push({
-                                id: currentItems.length,
-                                barcode: barcode,
-                                itemCode: itemCode,
-                                name: name || 'صنف غير معرف',
-                                reqQty: actualQty,
-                                recQty: 0,
-                                status: 'Unreceived',
-                                prodDate: '',
-                                expiryDate: '',
-                                shelfLifeYears: 2,
-                                expiryEvaluation: 'غير مسجل'
-                            });
-                        }
-                    }
-
-                    if(currentItems.length === 0) {
-                        alert("لم نتمكن من استخراج بيانات تحويل صحيحة من هذا الشيت.");
-                        return;
-                    }
-
-                    document.getElementById('uploadGateway').classList.add('hidden');
-                    document.getElementById('workspace').classList.remove('hidden');
-                    document.getElementById('workspace').classList.add('flex');
-                    renderTables();
-
-                } catch(err) {
-                    alert("خطأ أثناء قراءة ملف الإكسيل: " + err.message);
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        // 2. البحث والتمرير التلقائي للباركود
-        document.getElementById('barcodeSearchInput').addEventListener('input', function(e) {
-            triggerSearch(e.target.value.trim());
-        });
-
-        function triggerSearch(val) {
-            if(val.length >= 4) {
-                const matches = currentItems.filter(item => item.barcode.endsWith(val) || item.barcode === val);
-                if(matches.length === 1) {
-                    openActionModal(matches[0].id);
-                    document.getElementById('barcodeSearchInput').value = '';
-                }
-            }
-        }
-
-        // 3. مسح الباركود بالكاميرا
-        function startScanner() {
-            document.getElementById('scanner-container').classList.remove('hidden');
-            html5QrcodeScanner = new Html5QrcodeScanner(
-                "reader", 
-                { fps: 10, qrbox: {width: 250, height: 100}, aspectRatio: 1.0 }, 
-                false
-            );
-            html5QrcodeScanner.render(
-                function(decodedText) {
-                    closeScanner();
-                    triggerSearch(decodedText);
-                },
-                function(errorMessage) {
-                    // Ignore background errors
-                }
-            );
-        }
-
-        function closeScanner() {
-            if(html5QrcodeScanner) {
-                html5QrcodeScanner.clear();
-            }
-            document.getElementById('scanner-container').classList.add('hidden');
-        }
-
-        // 4. النوافذ التفاعلية
-        function openActionModal(idx) {
-            selectedItemIndex = idx;
-            const item = currentItems[idx];
-            document.getElementById('modalItemName').innerText = item.name;
-            document.getElementById('modalItemBarcode').innerText = item.barcode;
-            document.getElementById('modalQtyInput').value = item.recQty || item.reqQty;
-            
-            // تهيئة الصلاحية على القيمة المحفوظة أو الافتراضية
-            if(item.prodDate) document.getElementById('modalProdInput').value = item.prodDate;
-            setShelfLifeYears(item.shelfLifeYears);
-            
-            document.getElementById('actionModal').classList.remove('hidden');
-        }
-
-        function closeActionModal() {
-            document.getElementById('actionModal').classList.add('hidden');
-        }
-
-        function setShelfLifeYears(years) {
-            selectedShelfLifeYears = years;
-            document.querySelectorAll('.years-btn').forEach((btn, idx) => {
-                if (idx + 1 === years) {
-                    btn.className = "years-btn bg-orange-600 text-white py-2 rounded font-bold text-xs shadow-md shadow-orange-500/30";
-                } else {
-                    btn.className = "years-btn bg-slate-700 text-slate-300 py-2 rounded font-bold text-xs";
-                }
-            });
-        }
-
-        // 5. المعادلة الدقيقة للصلاحية بناءً على نسبة 50% و 100%
-        function evaluateExpiryStatus(prodStr, years) {
-            if(!prodStr) return { status: 'غير مسجل', badgeClass: 'bg-slate-700 text-slate-300', expStr: '--' };
-
-            const recDateVal = document.getElementById('inputRecDate').value;
-            const recDateObj = recDateVal ? new Date(recDateVal) : new Date();
-            
-            const [prodYear, prodMonth] = prodStr.split('-').map(Number);
-            
-            // حساب تاريخ الانتهاء تلقائياً
-            const expYear = prodYear + years;
-            const expStr = `${expYear}-${String(prodMonth).padStart(2, '0')}`;
-
-            const totalShelfMonths = years * 12; // إجمالي عمر المنتج بالشهور
-            
-            // حساب الشهور المنقضية من الإنتاج حتى تاريخ إذن الاستلام
-            const passedMonths = (recDateObj.getFullYear() - prodYear) * 12 + ((recDateObj.getMonth() + 1) - prodMonth);
-
-            // الشرط 1: إذا مر 100% أو أكثر من الصلاحية (منتهي)
-            if (passedMonths >= totalShelfMonths) {
-                return { status: 'منتهي الصلاحية ❌', badgeClass: 'bg-red-600 text-white font-bold', expStr: expStr };
-            }
-
-            // الشرط 2: إذا مر 50% أو أكثر (ولكن أقل من 100%) (نصف مدة)
-            if (passedMonths >= (totalShelfMonths / 2) && passedMonths < totalShelfMonths) {
-                return { status: 'تخطت نصف المدة ⚠️', badgeClass: 'bg-amber-500 text-white font-bold', expStr: expStr };
-            }
-
-            // الشرط 3: إذا مر أقل من 50% (سارية)
-            return { status: 'سارية (مقبولة) ✅', badgeClass: 'bg-emerald-600 text-white font-bold', expStr: expStr };
-        }
-
-        function saveItemReceiving(e) {
-            e.preventDefault();
-            if(selectedItemIndex === null) return;
-
-            const qty = Number(document.getElementById('modalQtyInput').value);
-            const prod = document.getElementById('modalProdInput').value;
-
-            currentItems[selectedItemIndex].recQty = qty;
-            currentItems[selectedItemIndex].prodDate = prod;
-            currentItems[selectedItemIndex].shelfLifeYears = selectedShelfLifeYears;
-            currentItems[selectedItemIndex].status = 'Received';
-
-            if(prod) {
-                const evalRes = evaluateExpiryStatus(prod, selectedShelfLifeYears);
-                currentItems[selectedItemIndex].expiryEvaluation = evalRes.status;
-                currentItems[selectedItemIndex].expiryDate = evalRes.expStr;
-            }
-
-            closeActionModal();
-            renderTables();
-        }
-
-        function renderTables() {
-            const tbody1 = document.getElementById('itemsTableBody');
-            tbody1.innerHTML = '';
-
-            currentItems.forEach((item, idx) => {
-                const isUnreceived = item.status === 'Unreceived';
-                const evalRes = evaluateExpiryStatus(item.prodDate, item.shelfLifeYears);
-                
-                tbody1.innerHTML += `
-                    <tr>
-                        <td class="p-3 font-bold">${idx + 1}</td>
-                        <td class="p-3 font-mono font-bold text-orange-400">${item.barcode}</td>
-                        <td class="p-3 font-bold text-slate-200">${item.name}</td>
-                        <td class="p-3 font-bold text-slate-300">${item.reqQty}</td>
-                        <td class="p-3 font-bold ${isUnreceived ? 'opacity-40' : 'text-emerald-400'}">${item.recQty}</td>
-                        <td class="p-3 font-mono text-slate-400">${item.prodDate || '--'}</td>
-                        <td class="p-3 font-mono text-slate-400">${evalRes.expStr || '--'}</td>
-                        <td class="p-3"><span class="px-2 py-1 rounded text-xs ${evalRes.badgeClass}">${evalRes.status}</span></td>
-                        <td class="p-3"><button onclick="openActionModal(${idx})" class="bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 px-3 py-1 rounded text-xs font-bold border border-orange-500/30">استلام</button></td>
-                    </tr>
-                `;
-            });
-        }
-
-        function triggerOfficialPrint() {
-            document.getElementById('printDocNo').innerText = document.getElementById('inputDocNo').value || '--';
-            document.getElementById('printRecDate').innerText = document.getElementById('inputRecDate').value || '--';
-            document.getElementById('printSenderBranch').innerText = document.getElementById('inputSenderBranch').value || '--';
-            document.getElementById('printReceiverBranch').innerText = document.getElementById('inputReceiverBranch').value || '--';
-            document.getElementById('printReceiverName').innerText = document.getElementById('inputReceiverName').value || '--';
-
-            const printTbody = document.getElementById('printTableBody');
-            printTbody.innerHTML = '';
-            
-            currentItems.forEach((item, idx) => {
-                const diff = item.recQty - item.reqQty;
-                printTbody.innerHTML += `
-                    <tr>
-                        <td class="p-1 border text-center">${idx + 1}</td>
-                        <td class="p-1 border text-center font-mono">${item.barcode}</td>
-                        <td class="p-1 border font-bold">${item.name}</td>
-                        <td class="p-1 border text-center">${item.reqQty}</td>
-                        <td class="p-1 border text-center font-bold">${item.recQty}</td>
-                        <td class="p-1 border text-center">${diff === 0 ? 'مطابق' : (diff < 0 ? 'عجز ' + diff : 'زيادة +' + diff)}</td>
-                        <td class="p-1 border text-center font-mono">${item.prodDate || '--'}</td>
-                        <td class="p-1 border text-center">${item.expiryEvaluation || '--'}</td>
-                    </tr>
-                `;
-            });
-
-            window.print();
-        }
-    </script>
+/* ---------- Print ---------- */
+function finish(){
+  const left=items.filter(i=>i.recv==null).length;
+  if(left&&!confirm('يوجد '+left+' صنف لم يتم استلامه وسيُحتسب عجزًا. هل تريد المتابعة؟'))return;
+  const rows=items.map((it,i)=>{
+    const r=it.recv??0,d=r-it.qty;
+    const diff=d<0?'عجز ('+Math.abs(d)+')':d>0?'زيادة ('+d+')':'مطابق';
+    return`<tr><td>${i+1}</td><td>${esc(it.bc||it.code)}</td><td style="text-align:right">${esc(it.name)}</td><td>${it.qty}</td><td>${it.recv==null?'لم يُستلم':r}</td><td>${diff}</td><td>${it.prod?fm(it.prod):'—'}</td><td>${it.exp?fm(it.exp):'—'}</td><td>${it.st?ST[it.st][0].replace(/[✅⚠️❌]/g,''):'—'}</td></tr>`;
+  }).join('');
+  $('printDoc').innerHTML=`
+  <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:6px"><h1 style="font-size:20px;font-weight:800">أسواق فتح الله ماركت</h1><h2 style="font-size:15px">محضر استلام تحويل مخزني</h2></div>
+  <table style="margin-top:8px"><tr><th>رقم الإذن</th><td>${esc(info.no)}</td><th>تاريخ الاستلام</th><td>${esc(info.date)}</td></tr>
+  <tr><th>فرع الصرف</th><td>${esc(info.from)}</td><th>فرع الاستلام</th><td>${esc(info.to)}</td></tr></table>
+  <table><thead><tr><th>م</th><th>الباركود</th><th>الصنف</th><th>المصدرة</th><th>المستلمة</th><th>الفارق</th><th>الإنتاج</th><th>الانتهاء</th><th>التقييم</th></tr></thead><tbody>${rows}</tbody></table>
+  <div style="display:flex;justify-content:space-between;margin-top:50px"><div>مسئول الاستلام: ${esc(info.user)}<br><br>التوقيع: ..............................</div><div>اعتماد المدير: ..............................</div></div>`;
+  window.print();
+}
+</script>
 </body>
 </html>
