@@ -59,6 +59,30 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);line-h
 .sug{position:absolute;z-index:30;inset-inline:0;top:100%;margin-top:.35rem;background:var(--panel);border:1px solid var(--line);border-radius:.8rem;max-height:18rem;overflow:auto;box-shadow:var(--shadow)}
 .sug-item{display:flex;justify-content:space-between;gap:1rem;width:100%;text-align:right;padding:.65rem 1rem;border:0;border-bottom:1px solid var(--line);background:none;color:var(--txt);font:inherit;cursor:pointer}
 .sug-item:hover{background:var(--soft)}.sug-item .qn{color:var(--acc);font-weight:700}
+@media(max-width:700px){
+ .wrap{padding:.75rem .65rem 2rem}
+ .topbar{padding:.75rem .9rem;margin-bottom:1rem;border-radius:.9rem}
+ .topbar h1{font-size:1.1rem}.topbar p{font-size:.72rem}
+ .logo{width:38px;height:38px;font-size:1.1rem}
+ #themeBtn{padding:.5rem .7rem;font-size:.8rem}
+ .pad{padding:1.1rem}
+ .inp{font-size:16px;padding:.8rem .9rem}
+ .btn{min-height:46px}
+ .tools .btn{flex:1 1 calc(50% - .5rem)}
+ .tools>.relative{flex:1 1 100%!important}
+ .chips{gap:.4rem}.chip{font-size:.78rem;padding:.15rem .7rem}
+ .t,.t tbody{display:block}.t thead{display:none}
+ .t tr{display:grid;grid-template-columns:1fr 1fr;gap:.5rem .9rem;padding:1rem;border-bottom:1px solid var(--line)}
+ .t tr:hover td{background:none}
+ .t td{display:block;border:0;padding:0;text-align:right;white-space:normal}
+ .t td[data-label]::before{content:attr(data-label);display:block;font-size:.72rem;color:var(--mut)}
+ .t td:first-child{display:none}
+ .t td.nm{grid-column:1/-1;font-weight:700;font-size:1rem;min-width:0}
+ .t td.st,.t td.act{grid-column:1/-1}
+ .t td.act .btn{width:100%;padding:.7rem}
+ .modal{align-items:flex-end;padding:0}
+ .sheet{max-width:100%;border-radius:1.2rem 1.2rem 0 0;padding:1.25rem 1.1rem 1.5rem;max-height:94vh}
+}
 #printDoc{display:none}
 @media print{
  @page{size:A4;margin:12mm}
@@ -85,7 +109,7 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);line-h
    <label class="lbl">رقم الإذن<input id="fNo" class="inp" inputmode="numeric"></label>
    <label class="lbl">تاريخ الاستلام<input id="fDate" type="date" class="inp"></label>
    <label class="lbl">فرع الصرف<input id="fFrom" class="inp"></label>
-   <label class="lbl">فرع الاستلام<input id="fTo" class="inp"></label>
+   <label class="lbl">فرع الاستلام<input id="fTo" class="inp" value="فلمنج"></label>
    <label class="lbl sm:col-span-2">اسم المسئول<input id="fUser" class="inp"></label>
   </div>
   <label class="drop" style="margin-top:1.5rem">رفع ملف الإذن<small>Excel / CSV / Xls</small><input id="file" type="file" accept=".xls,.xlsx,.csv" class="hidden"></label>
@@ -95,8 +119,8 @@ body{font-family:'Cairo',sans-serif;background:var(--bg);color:var(--txt);line-h
  <section id="work" class="hidden">
   <div id="infoBar" class="chips"></div>
   <div class="card pad" style="padding:1rem">
-   <div class="flex flex-wrap gap-3">
-    <div class="relative flex-1" style="min-width:220px"><input id="q" class="inp" placeholder="اكتب اسم الصنف أو الباركود (4 أرقام أو أكثر)" autocomplete="off"><div id="sug" class="sug hidden"></div></div>
+   <div class="flex flex-wrap gap-3 tools">
+    <div class="relative" style="flex:1 1 220px"><input id="q" class="inp" placeholder="اكتب اسم الصنف أو الباركود (4 أرقام أو أكثر)" autocomplete="off"><div id="sug" class="sug hidden"></div></div>
     <button onclick="cam()" class="btn">فتح الكاميرا</button>
     <button onclick="finish()" class="btn btn-pri">إنهاء وطباعة التقرير</button>
    </div>
@@ -215,7 +239,7 @@ function render(){
   $('tb').innerHTML=items.map((it,i)=>{
     if(v&&!mt(it,v))return'';
     const s=it.st?`<span class="badge ${ST[it.st][1]}">${ST[it.st][0]}</span>`:'—';
-    return`<tr class="${it.recv!=null?'done':''}"><td>${i+1}</td><td>${esc(it.bc||it.code)}</td><td class="nm">${esc(it.name)}</td><td>${it.qty}</td><td><b>${it.recv??'—'}</b></td><td>${it.prod?fm(it.prod):'—'}</td><td>${it.exp?fm(it.exp):'—'}</td><td>${s}</td><td><button onclick="openAct(${i})" class="btn btn-pri btn-sm">استلام</button></td></tr>`;
+    return`<tr class="${it.recv!=null?'done':''}"><td data-label="م">${i+1}</td><td data-label="الباركود">${esc(it.bc||it.code)}</td><td class="nm">${esc(it.name)}</td><td data-label="المصدرة">${it.qty}</td><td data-label="المستلمة"><b>${it.recv??'—'}</b></td><td data-label="الإنتاج">${it.prod?fm(it.prod):'—'}</td><td data-label="الانتهاء">${it.exp?fm(it.exp):'—'}</td><td class="st" data-label="التقييم">${s}</td><td class="act"><button onclick="openAct(${i})" class="btn btn-pri btn-sm">استلام</button></td></tr>`;
   }).join('');
   const dn=items.filter(i=>i.recv!=null).length;$('prog').textContent='تم استلام '+dn+' من '+items.length;$('barI').style.width=(items.length?dn/items.length*100:0)+'%';
 }
@@ -312,7 +336,7 @@ function finish(){
     return`<tr><td>${i+1}</td><td>${esc(it.bc||it.code)}</td><td style="text-align:right">${esc(it.name)}</td><td>${it.qty}</td><td>${it.recv==null?'لم يُستلم':r}</td><td>${diff}</td><td>${it.prod?fm(it.prod):'—'}</td><td>${it.exp?fm(it.exp):'—'}</td><td>${it.st?ST[it.st][0].replace(/[✅⚠️❌]/g,''):'—'}</td></tr>`;
   }).join('');
   $('printDoc').innerHTML=`
-  <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:6px"><h1 style="font-size:20px;font-weight:800">أسواق فتح الله ماركت</h1><h2 style="font-size:15px">محضر استلام تحويل مخزني</h2></div>
+  <div style="text-align:center;border-bottom:2px solid #000;padding-bottom:6px"><h1 style="font-size:20px;font-weight:800">أسواق فتح الله ماركت</h1><h2 style="font-size:15px">تقرير استلام تحويل</h2></div>
   <table style="margin-top:8px"><tr><th>رقم الإذن</th><td>${esc(info.no)}</td><th>تاريخ الاستلام</th><td>${esc(info.date)}</td></tr>
   <tr><th>فرع الصرف</th><td>${esc(info.from)}</td><th>فرع الاستلام</th><td>${esc(info.to)}</td></tr></table>
   <table><thead><tr><th>م</th><th>الباركود</th><th>الصنف</th><th>المصدرة</th><th>المستلمة</th><th>الفارق</th><th>الإنتاج</th><th>الانتهاء</th><th>التقييم</th></tr></thead><tbody>${rows}</tbody></table>
