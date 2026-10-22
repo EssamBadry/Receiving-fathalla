@@ -51,7 +51,7 @@ body{font-family:'Cairo',sans-serif}
  <!-- Workspace -->
  <section id="work" class="hidden">
   <div class="flex flex-wrap gap-2 mb-3">
-   <input id="q" class="inp flex-1 min-w-[200px]" placeholder="ابحث بالباركود (4 أرقام أو أكثر) أو اسم الصنف" autocomplete="off">
+   <div class="relative flex-1 min-w-[200px]"><input id="q" class="inp" placeholder="اكتب اسم الصنف أو الباركود (4 أرقام أو أكثر)" autocomplete="off"><div id="sug" class="hidden absolute z-30 inset-x-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg max-h-72 overflow-auto shadow-xl"></div></div>
    <button onclick="cam()" class="bg-slate-700 hover:bg-slate-600 rounded-lg px-4 font-semibold">فتح الكاميرا</button>
    <button onclick="finish()" class="bg-orange-500 hover:bg-orange-600 text-slate-900 rounded-lg px-4 py-2 font-bold">إنهاء وطباعة التقرير</button>
   </div>
@@ -81,7 +81,8 @@ body{font-family:'Cairo',sans-serif}
 <div id="actM" class="modal hidden fixed inset-0 bg-black/70 flex items-center justify-center p-4 z-50">
  <div class="bg-slate-800 rounded-xl p-6 w-full max-w-md space-y-4">
   <div><h3 id="aName" class="font-bold text-lg"></h3><p id="aSub" class="text-slate-400 text-sm"></p></div>
-  <label class="block text-sm">الكمية الفعلية المستلمة<input id="aQty" type="number" min="0" step="any" inputmode="decimal" class="inp mt-1"></label>
+  <div class="bg-slate-900 rounded-lg p-3 flex justify-between items-center"><span class="text-sm text-slate-400">الكمية في إذن الصرف</span><span id="aExp" class="text-2xl font-extrabold text-orange-400"></span></div>
+  <label class="block text-sm">الكمية المستلمة (عدّلها لو مختلفة)<input id="aQty" type="number" min="0" step="any" inputmode="decimal" class="inp mt-1"></label>
   <div id="expBox" class="space-y-3">
    <label class="block text-sm">تاريخ الإنتاج (شهر/سنة)<input id="aProd" type="month" class="inp mt-1"></label>
    <div><p class="text-sm mb-1">مدة الصلاحية (سنوات)</p><div id="yrs" class="grid grid-cols-5 gap-2"></div></div>
@@ -109,10 +110,16 @@ function parse(rows){
   const head=rows.slice(0,10).map(r=>(r||[]).join(' ')).join(' ');
   const m=head.match(/(?:رقم المستند|رقم التحويل|رقم الطلب)\s*[:\-]?\s*(\d+)/);
   const out=[];
-  rows.forEach(r=>{
-    if(!r)return;
-    const q=parseFloat(clean(r[0]).replace(/,/g,'')),nm=clean(r[11]);
-    if(q>0&&nm.length>1&&!bad(nm))out.push({qty:q,name:nm,bc:clean(r[30]),code:clean(r[33])});
+  let C={q:0,n:11,b:30,c:33};
+  const hi=rows.slice(0,15).findIndex(r=>r&&r.some(x=>/اسم\s*الصنف/.test(clean(x))));
+  if(hi>=0){
+    const f=(re,d)=>{const k=rows[hi].findIndex(x=>re.test(clean(x)));return k>=0?k:d};
+    C={q:f(/الكمية\s*الفعلية/,0),n:f(/اسم\s*الصنف/,11),b:f(/الباركود/,30),c:f(/كود\s*الصنف/,33)};
+  }
+  rows.forEach((r,ri)=>{
+    if(!r||ri===hi)return;
+    const q=parseFloat(clean(r[C.q]).replace(/,/g,'')),nm=clean(r[C.n]);
+    if(q>0&&nm.length>1&&!bad(nm))out.push({qty:q,name:nm,bc:clean(r[C.b]),code:clean(r[C.c])});
   });
   if(!out.length)rows.forEach(r=>{
     if(!r)return;
@@ -170,7 +177,7 @@ function setMode(v){
 function render(){
   const v=$('q').value.trim();
   $('tb').innerHTML=items.map((it,i)=>{
-    if(v&&!(it.name.includes(v)||it.bc.includes(v)||it.code.includes(v)))return'';
+    if(v&&!mt(it,v))return'';
     const s=it.st?`<span class="px-2 py-1 rounded ${ST[it.st][1]}">${ST[it.st][0]}</span>`:'—';
     return`<tr class="border-t border-slate-700 ${it.recv!=null?'bg-slate-800/60':''}"><td class="p-2">${i+1}</td><td>${esc(it.bc||it.code)}</td><td class="text-right whitespace-normal min-w-[200px]">${esc(it.name)}</td><td>${it.qty}</td><td class="font-bold">${it.recv??'—'}</td><td>${it.prod?fm(it.prod):'—'}</td><td>${it.exp?fm(it.exp):'—'}</td><td class="p-1">${s}</td><td class="p-1"><button onclick="openAct(${i})" class="bg-orange-500 text-slate-900 font-bold rounded px-3 py-1">استلام</button></td></tr>`;
   }).join('');
@@ -180,9 +187,20 @@ function fm(d){
   if(typeof d==='string'){const[y,m]=d.split('-');return m+'/'+y}
   return String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
 }
+const mt=(it,v)=>v.split(/\s+/).every(t=>it.name.includes(t)||it.bc.includes(t)||it.code.includes(t));
+let firstSug=-1;
+function sugg(v){
+  const m=[];
+  if(v.length>=2&&!/^\d+$/.test(v))items.forEach((it,i)=>{if(m.length<8&&mt(it,v))m.push(i)});
+  firstSug=m.length?m[0]:-1;
+  $('sug').innerHTML=m.map(i=>`<button type="button" onclick="pick(${i})" class="w-full text-right px-3 py-2 hover:bg-slate-700 border-b border-slate-700 flex justify-between gap-3"><span>${esc(items[i].name)}</span><span class="text-orange-400 whitespace-nowrap">${items[i].qty}</span></button>`).join('');
+  show('sug',m.length>0);
+}
+function pick(i){$('q').value='';show('sug',false);render();openAct(i)}
+$('q').addEventListener('keydown',e=>{if(e.key==='Enter'&&firstSug>=0){e.preventDefault();pick(firstSug)}});
 $('q').addEventListener('input',search);
 function search(){
-  const v=$('q').value.trim();$('msg').textContent='';
+  const v=$('q').value.trim();$('msg').textContent='';sugg(v);
   if(v.length>=4){
     const hit=[];
     items.forEach((it,i)=>{if([it.bc,it.code].some(c=>c&&(c===v||c.endsWith(v))))hit.push(i)});
@@ -222,11 +240,11 @@ function openAct(i){
   cur=i;const it=items[i];
   $('aName').textContent=it.name;
   $('aSub').textContent='الباركود: '+(it.bc||it.code||'—')+' — الكمية المصدرة: '+it.qty;
-  $('aQty').value=it.recv??'';
+  $('aExp').textContent=it.qty;$('aQty').value=it.recv??it.qty;
   $('aProd').value=it.prod;$('aNo').checked=it.noExp;
   years=it.years;togNo();if(!it.noExp)setYUI();
   show('expBox',needExp);show('actM');
-  setTimeout(()=>$('aQty').focus(),50);
+  setTimeout(()=>{$('aQty').focus();$('aQty').select()},50);
 }
 function evalItem(it){
   if(it.noExp){it.st='none';it.exp=null;return}
@@ -236,6 +254,7 @@ function evalItem(it){
   it.exp=e;
   it.st=r>=e?'exp':(r-p>(e-p)/2?'half':'ok');
 }
+$('aQty').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();needExp&&!$('aNo').checked?$('aProd').focus():saveAct()}});
 function saveAct(){
   const q=parseFloat($('aQty').value);
   if(isNaN(q)||q<0){alert('أدخل الكمية الفعلية');return}
