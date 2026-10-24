@@ -1,0 +1,15 @@
+{
+  "name": "receiving-system",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@capacitor/android": "^6.1.0",
+    "@capacitor/core": "^6.1.0",
+    "@fontsource/cairo": "^5.0.0",
+    "html5-qrcode": "2.3.8",
+    "xlsx": "0.18.5"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.0"
+  }
+}

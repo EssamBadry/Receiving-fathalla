@@ -1,0 +1,104 @@
+name: Build offline APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'index.html'
+      - 'package.json'
+      - 'capacitor.config.json'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Install packages
+        run: npm install
+
+      - name: Prepare offline web files
+        run: |
+          mkdir -p www/lib
+          cp index.html manifest.json icon-192.png icon-512.png www/
+          cp "$(find node_modules/xlsx -name xlsx.full.min.js | head -1)" www/lib/
+          cp "$(find node_modules/html5-qrcode -name html5-qrcode.min.js | head -1)" www/lib/
+          cp -r node_modules/@fontsource/cairo www/fonts
+          sed -i 's|https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js|lib/xlsx.full.min.js|' www/index.html
+          sed -i 's|https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js|lib/html5-qrcode.min.js|' www/index.html
+          sed -i 's|<link href="https://fonts.googleapis.com[^>]*>|<link rel="stylesheet" href="fonts/arabic-400.css"><link rel="stylesheet" href="fonts/arabic-600.css"><link rel="stylesheet" href="fonts/arabic-800.css"><link rel="stylesheet" href="fonts/latin-400.css"><link rel="stylesheet" href="fonts/latin-600.css"><link rel="stylesheet" href="fonts/latin-800.css">|' www/index.html
+          sed -i '/serviceWorker/d' www/index.html
+          ls -R www | head -60
+          echo "remaining online links:"; grep -c "cdnjs\|googleapis" www/index.html || true
+
+      - name: Create Android project
+        run: |
+          npx cap add android
+          sed -i 's#<uses-permission android:name="android.permission.INTERNET" />#&\n    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />#' android/app/src/main/AndroidManifest.xml
+          cat > android/app/src/main/java/com/fathalla/receiving/MainActivity.java <<'EOF'
+          package com.fathalla.receiving;
+
+          import android.os.Bundle;
+          import android.print.PrintAttributes;
+          import android.print.PrintDocumentAdapter;
+          import android.print.PrintManager;
+          import android.webkit.JavascriptInterface;
+          import android.webkit.WebView;
+          import com.getcapacitor.BridgeActivity;
+
+          public class MainActivity extends BridgeActivity {
+            @Override
+            public void onCreate(Bundle savedInstanceState) {
+              super.onCreate(savedInstanceState);
+              final WebView wv = getBridge().getWebView();
+              wv.addJavascriptInterface(new Object() {
+                @JavascriptInterface
+                public void print() {
+                  runOnUiThread(new Runnable() {
+                    public void run() {
+                      PrintManager pm = (PrintManager) getSystemService(PRINT_SERVICE);
+                      PrintDocumentAdapter ad = wv.createPrintDocumentAdapter("Receiving Report");
+                      pm.print("Receiving Report", ad,
+                        new PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).build());
+                    }
+                  });
+                }
+              }, "AndroidPrint");
+            }
+          }
+          EOF
+
+      - name: App icon (from logo)
+        continue-on-error: true
+        run: |
+          for d in mdpi:48 hdpi:72 xhdpi:96 xxhdpi:144 xxxhdpi:192; do
+            n=${d%%:*}; s=${d##*:}
+            for f in ic_launcher ic_launcher_round; do
+              convert icon-512.png -resize ${s}x${s} android/app/src/main/res/mipmap-$n/$f.png
+            done
+          done
+          rm -rf android/app/src/main/res/mipmap-anydpi-v26
+
+      - name: Build APK (fixed signing key)
+        run: |
+          mkdir -p ~/.android
+          cp debug.keystore ~/.android/debug.keystore
+          npx cap sync android
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Receiving-System-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk

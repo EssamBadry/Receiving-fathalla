@@ -1,0 +1,6 @@
+{
+  "appId": "com.fathalla.receiving",
+  "appName": "Receiving System",
+  "webDir": "www",
+  "server": { "androidScheme": "https" }
+}
